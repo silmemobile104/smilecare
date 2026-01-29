@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>สัญญาตะกาฟุลอุบัติเหตุสำหรับมือถือ - Silmin Mobile</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --border-color: #000;
+            --font-family: 'Angsana New', 'TH Sarabun New', 'Sarabun', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        body {
+            font-family: var(--font-family);
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            font-size: 18px;
+        }
+
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 10mm 15mm;
+            margin: 5mm auto;
+            background: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .page-content {
+            flex-grow: 1;
+        }
+
+        @media print {
+            body {
+                background: none;
+                padding: 0;
+            }
+
+            .page {
+                margin: 0;
+                box-shadow: none;
+                page-break-after: always;
+            }
+        }
+
+        /* Header Styles */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .logo-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .logo-text {
+            color: #d4a017;
+            font-weight: bold;
+            font-size: 28px;
+            line-height: 1;
+        }
+
+        .company-name {
+            text-align: center;
+            flex-grow: 1;
+        }
+
+        .company-name h1 {
+            margin: 0;
+            font-size: 26px;
+            font-weight: bold;
+        }
+
+        .company-name h2 {
+            margin: 5px 0;
+            font-size: 22px;
+            font-weight: normal;
+        }
+
+        .date-section {
+            text-align: right;
+            padding-top: 40px;
+        }
+
+        /* Form Table Layout */
+        .form-container {
+            border: 1.5px solid var(--border-color);
+            width: 100%;
+        }
+
+        .row {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .row:last-child {
+            border-bottom: none;
+        }
+
+        .col {
+            padding: 5px 8px;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .col:last-child {
+            border-right: none;
+        }
+
+        .section-title {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        /* Specific Layouts */
+        .w-20 {
+            width: 20%;
+        }
+
+        .w-30 {
+            width: 30%;
+        }
+
+        .w-40 {
+            width: 40%;
+        }
+
+        .w-50 {
+            width: 50%;
+        }
+
+        .w-60 {
+            width: 60%;
+        }
+
+        .w-70 {
+            width: 70%;
+        }
+
+        .w-100 {
+            width: 100%;
+        }
+
+        .field {
+            margin-bottom: 5px;
+            display: flex;
+            align-items: baseline;
+        }
+
+        .label {
+            margin-right: 5px;
+        }
+
+        .dotted-line {
+            border-bottom: 1px dotted #000;
+            display: inline-block;
+            min-height: 1.2em;
+            padding: 0 5px;
+        }
+
+        .address-box {
+            padding: 5px 10px;
+            line-height: 1.4;
+        }
+
+        .section-header-row {
+            background-color: #f9f9f9;
+        }
+
+        /* Section 6 details */
+        .coverage-content {
+            padding: 10px;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .coverage-section {
+            margin-bottom: 15px;
+        }
+
+        .coverage-title {
+            font-weight: bold;
+            text-decoration: underline;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .coverage-list {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .coverage-list li {
+            margin-bottom: 4px;
+        }
+
+        /* Signature Section */
+        .signature-section {
+            margin-top: 15px;
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+        }
+
+        .sig-block {
+            width: 30%;
+        }
+
+        .sig-line {
+            border-bottom: 1px dotted #000;
+            margin-bottom: 5px;
+            padding-top: 40px;
+        }
+
+        .sig-name {
+            margin-top: 10px;
+        }
+
+        /* Section 5 table */
+        .installment-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 16px;
+        }
+
+        .installment-table td {
+            border: 1px solid var(--border-color);
+            padding: 5px 8px;
+        }
+
+        .payment-note {
+            font-size: 14px;
+            margin-top: 5px;
+            line-height: 1.3;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- PAGE 1 -->
+    <div class="page">
+        <div class="page-content">
+            <!-- Header -->
+            <div class="header">
+                <div class="logo-section">
+                    <img src="logo_silminmobile.png" alt="Silmin Mobile Logo"
+                        style="height: 100px; object-fit: contain;">
+                </div>
+                <div class="company-name">
+                    <h1>บริษัท ซิลมีนโมบาย จำกัด</h1>
+                    <h2>Smile Care</h2>
+                </div>
+                <div class="date-section">
+                    วันที่ <span class="doc_currentDate">.....................................................</span>
+                </div>
+            </div>
+
+            <div class="form-container">
+                <!-- Header Info -->
+                <div class="row">
+                    <div class="col w-40">
+                        <span class="label">เลขที่สมาชิก</span>
+                        <span class="dotted-line" id="doc_memberId" style="width: 150px;"></span>
+                    </div>
+                    <div class="col w-60">
+                        <span class="label" style="font-weight: bold;">สัญญาตะกาฟุลอุบัติเหตุสำหรับมือถือ</span>
+                    </div>
+                </div>
+
+                <!-- 1. Customer Info -->
+                <div class="row">
+                    <div class="col w-60" style="border-right: 1.5px solid #000;">
+                        <span class="section-title">1. ข้อมูลลูกค้า</span>
+                        <div class="field">
+                            <span class="label">ชื่อ</span> <span id="doc_firstName" class="dotted-line"
+                                style="width: 150px;"></span>
+                            <span class="label">สกุล</span> <span id="doc_lastName" class="dotted-line"
+                                style="width: 150px;"></span>
+                        </div>
+                        <div class="field">
+                            <span class="label">เบอร์</span> <span id="doc_phone" class="dotted-line"
+                                style="width: 150px;"></span>
+                            <span class="label">อายุ</span> <span id="doc_age" class="dotted-line"
+                                style="width: 50px;"></span>
+                            <span class="label">ปี</span>
+                        </div>
+                        <div class="field" style="align-items: flex-start;">
+                            <span class="label">ที่อยู่</span>
+                            <div id="doc_address" class="dotted-line"
+                                style="width: 300px; height: 40px; border-bottom: none; border: 1px dotted #ccc; display: inline-block; overflow: hidden; vertical-align: top;">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col w-40">
+                        <span class="section-title">สถานที่ตั้ง</span>
+                        <div class="address-box">
+                            62 ถนนพิพิธภักดี ตำบลสะเตง อำเภอเมืองยะลา จังหวัดยะลา
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Product Details -->
+                <div class="row section-header-row">
+                    <div class="col w-100">
+                        <span class="section-title">2. รายละเอียดสินค้า</span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col w-100">
+                        <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 20px;">
+                            <div>
+                                <div class="field"><span class="label">สินค้า</span> <span id="doc_deviceType"
+                                        class="dotted-line" style="width: 150px;"></span></div>
+                                <div class="field"><span class="label">รุ่น</span> <span id="doc_model"
+                                        class="dotted-line" style="width: 165px;"></span></div>
+                                <div class="field"><span class="label">IMEI</span> <span id="doc_imei"
+                                        class="dotted-line" style="width: 160px;"></span></div>
+                            </div>
+                            <div>
+                                <div class="field">
+                                    <span class="label">ประเภท</span> <span id="doc_deviceType_sub" class="dotted-line"
+                                        style="width:100px;"></span>
+                                    <span class="label">สี</span> <span id="doc_color" class="dotted-line"
+                                        style="width:80px;"></span>
+                                    <span class="label">ความจุ</span> <span id="doc_capacity" class="dotted-line"
+                                        style="width:80px;"></span>
+                                </div>
+                                <div class="field">
+                                    <span class="label">เลขเครื่อง</span> <span id="doc_serial" class="dotted-line"
+                                        style="width:200px;"></span>
+                                </div>
+                                <div class="field">
+                                    <span class="label">สิ้นสุดประกันศูนย์</span> <span id="doc_officialWarrantyEnd"
+                                        class="dotted-line" style="width:120px;"></span>
+                                    <span class="label" style="margin-left: 10px;">มูลค่าเครื่อง</span> <span
+                                        id="doc_deviceValue" class="dotted-line" style="width:80px;"></span>
+                                    <span class="label">บาท</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Contract Period -->
+                <div class="row section-header-row">
+                    <div class="col w-100">
+                        <span class="section-title">3. ระยะเวลาสัญญาตะกาฟุลอุบัติเหตุสำหรับมือถือ 1 ปี</span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col w-100">
+                        <div class="field">
+                            <span class="label">เริ่มวันที่</span> <span id="doc_startDate" class="dotted-line"
+                                style="width: 150px;"></span>
+                            <span class="label">เวลา</span> <span id="doc_startTime" class="dotted-line"
+                                style="width: 50px;">00:00</span>
+                            <span class="label">น.</span>
+                            <span class="label" style="margin-left: 20px;">สิ้นสุดวันที่</span> <span id="doc_endDate"
+                                class="dotted-line" style="width: 150px;"></span>
+                            <span class="label">เวลา</span> <span id="doc_endTime" class="dotted-line"
+                                style="width: 50px;">23:59</span>
+                            <span class="label">น.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Package Info -->
+                <div class="row section-header-row">
+                    <div class="col w-100">
+                        <span class="section-title">4. จำนวนเงินหลักประกันตะกาฟุลฯ ตามสัญญาฉบับนี้</span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col w-100">
+                        <div class="field">
+                            <span class="label">แพ็กเกจ</span> <span id="doc_packagePlan" class="dotted-line"
+                                style="width: 250px;"></span>
+                            <span id="doc_packagePriceDisplay" style="margin-left: 5px;"></span>
+                            <span class="label" style="margin-left: 20px;">มูลค่า</span> <span id="doc_packagePrice"
+                                class="dotted-line" style="width: 120px;"></span>
+                            <span class="label">บาท</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. Payment Details -->
+                <div class="row section-header-row">
+                    <div class="col w-100">
+                        <span class="section-title">5. รายละเอียดการชำระตามสัญญา</span>
+                    </div>
+                </div>
+
+                <!-- 5.1 Full Payment -->
+                <div id="sec_5_1" class="row">
+                    <div class="col w-100">
+                        <div class="field">
+                            <span class="label">5.1 ชำระเต็มจำนวน</span>
+                            <span id="doc_fullPrice" style="font-weight: bold; margin-left: 10px;"></span>
+                            <span class="label">บาท</span>
+                            <span class="label" style="margin-left: 40px;">ความคุ้มครอง 100% ของวงเงินประกันตะกาฟุลฯ
+                                หรือไม่เกิน</span>
+                            <span id="doc_coverageAmount" class="dotted-line" style="width: 120px;"></span>
+                            <span class="label">บาท</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5.2 Installment Payment -->
+                <div id="sec_5_2" class="row" style="display: none;">
+                    <div class="col w-100" style="padding: 0;">
+                        <table class="installment-table">
+                            <tr>
+                                <td rowspan="3" style="width: 18%; vertical-align: top;">5.2 ชำระแบ่งจ่าย 3 งวด</td>
+                                <td style="width: 18%;">งวดที่ 1 (<span id="doc_status_1">-</span>)</td>
+                                <td style="width: 8%; text-align: right;"><span id="doc_amt_1">-</span></td>
+                                <td style="width: 5%; border-left: none;">บาท</td>
+                                <td rowspan="3" style="width: 12%; vertical-align: top; text-align: center;">
+                                    ความคุ้มครอง
+                                </td>
+                                <td style="width: 8%; text-align: center;">10%</td>
+                                <td style="width: 15%;">วงเงินไม่เกิน</td>
+                                <td style="text-align: right;"><span id="doc_limit_1">-</span></td>
+                                <td style="width: 5%; border-left: none;">บาท</td>
+                            </tr>
+                            <tr>
+                                <td>งวดที่ 2 (<span id="doc_status_2">-</span>)</td>
+                                <td style="text-align: right;"><span id="doc_amt_2">-</span></td>
+                                <td style="border-left: none;">บาท</td>
+                                <td style="text-align: center;">30%</td>
+                                <td>วงเงินไม่เกิน</td>
+                                <td style="text-align: right;"><span id="doc_limit_2">-</span></td>
+                                <td style="border-left: none;">บาท</td>
+                            </tr>
+                            <tr>
+                                <td>งวดที่ 3 (<span id="doc_status_3">-</span>)</td>
+                                <td style="text-align: right;"><span id="doc_amt_3">-</span></td>
+                                <td style="border-left: none;">บาท</td>
+                                <td style="text-align: center;">100%</td>
+                                <td>วงเงินไม่เกิน</td>
+                                <td style="text-align: right;"><span id="doc_limit_3">-</span></td>
+                                <td style="border-left: none;">บาท</td>
+                            </tr>
+                        </table>
+                        <div class="payment-note" style="padding: 5px 10px;">
+                            (กรณีแบ่งชำระเงิน สมาชิกต้องชำระทุกวันที่ทำสัญญาเลทได้ไม่เกิน 5 วัน
+                            และกรณีเกิดอุบัติเหตุแจ้งเคลมสินค้า สมาชิกต้องมีการชำระเงินแล้วอย่างน้อย 2
+                            วันทำการก่อนเกิดเหตุ
+                            <br>มิฉะนั้นจะถือว่าขาดการเป็นสมาชิก ทางบริษัทจะยกเลิกการเป็นสมาชิกทันทีโดยไม่ต้องแจ้งล่วงหน้า
+                            และไม่สามารถทำการแจ้งความประสงค์เคลมสินค้า)
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Signatures Page 1 -->
+        <div class="signature-section">
+            <div class="sig-block">
+                <span>สมาชิกตะกาฟุล</span>
+                <div class="sig-line"></div>
+                <div class="sig-name">(<span
+                        class="doc_customerNameSig">....................................................</span>)</div>
+            </div>
+            <div class="sig-block">
+                <span>พนักงานสมายแคร์</span>
+                <div class="sig-line"></div>
+                <div class="sig-name">(<span
+                        class="doc_staffNameSig">....................................................</span>)</div>
+            </div>
+            <div class="sig-block">
+                <span>ผู้อนุมัติ</span>
+                <div class="sig-line"></div>
+                <div class="sig-name">(....................................................)</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAGE 2 -->
+    <div class="page">
+        <div class="page-content">
+            <!-- Header Page 2 -->
+            <div class="header">
+                <div class="logo-section">
+                    <img src="logo_silminmobile.png" alt="Silmin Mobile Logo"
+                        style="height: 100px; object-fit: contain;">
+                </div>
+                <div class="company-name">
+                    <h1>บริษัท ซิลมีนโมบาย จำกัด</h1>
+                    <h2>Smile Care</h2>
+                </div>
+                <div class="date-section">
+                    วันที่ <span class="doc_currentDate">.....................................................</span>
+                </div>
+            </div>
+
+            <div class="form-container">
+                <!-- 6. Coverage & Exclusions -->
+                <div class="row section-header-row">
+                    <div class="col w-100">
+                        <span class="section-title">6. รายละเอียดความคุ้มครองและข้อยกเว้น</span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col w-100 coverage-content">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+                            <div>
+                                <div class="coverage-section">
+                                    <span class="coverage-title">รายละเอียดความคุ้มครอง :</span>
+                                    <ul class="coverage-list">
+                                        <li>1. ความเสียหายที่เกิดจากอุบัติเหตุ เช่น ตกหล่น กระแทก
+                                            ทำให้เกิดความเสียหายกระทบต่อเครื่องและการใช้งาน</li>
+                                    </ul>
+                                </div>
+                                <div class="coverage-section" style="margin-top: 20px;">
+                                    <span class="coverage-title">จุดเด่นของบริการ:</span>
+                                    <ul class="coverage-list">
+                                        <li>1. ซ่อมด้วยอะไหล่แท้โดยไม่ต้องจ่ายเงินที่ศูนย์บริการที่ได้รับอนุญาต</li>
+                                        <li>2. ค่าจัดส่งฟรี</li>
+                                        <li>3. รับประกันงานซ่อม 60 วัน (หลังจากรับบริการ)</li>
+                                        <li>4. ติดต่อขอรับบริการได้ง่าย เพียงติดต่อผ่าน Call Center</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="coverage-section">
+                                    <span class="coverage-title">ข้อยกเว้น:
+                                        โปรดดูเอกสารแนบสำหรับเงื่อนไขและข้อยกเว้นทั้งหมด</span>
+                                    <ul class="coverage-list">
+                                        <li>1. อุปกรณ์เสริมที่ซื้อนอกเหนือจากมาตรฐานผู้ผลิตหรือผู้จำหน่าย</li>
+                                        <li>2. ค่าชดเชยจากการสูญเสียข้อมูล</li>
+                                    </ul>
+                                </div>
+                                <div class="coverage-section" style="margin-top: 20px;">
+                                    <span class="coverage-title">เงื่อนไขเครื่องมือถือที่สามารถสมัครบริการ :</span>
+                                    <p style="margin: 0; padding-left: 5px;">เครื่องใหม่อายุไม่เกิน 30 วัน
+                                        (นับจากวันที่มีการซื้อเครื่อง)</p>
+                                </div>
+                                <div
+                                    style="margin-top: 20px; font-weight: bold; border-top: 1px solid #eee; padding-top: 15px;">
+                                    <p style="margin: 5px 0;">รายละเอียดแผน: <span id="doc_packagePlan_sec6">-</span>
+                                    </p>
+                                    <p style="margin: 5px 0;">ค่าบริการรายปี: <span id="doc_packagePrice_sec6">-</span>
+                                        บาท
+                                    </p>
+                                    <p style="margin: 5px 0;">ไม่มีค่าธรรมเนียมซ่อม</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 30px; font-size: 16px; line-height: 1.6;">
+                <p><strong>หมายเหตุ:</strong> ข้อมูลในเอกสารฉบับนี้เป็นเพียงสรุปเบื้องต้น
+                    สมาชิกควรศึกษาเงื่อนไขความคุ้มครองและข้อยกเว้นโดยละเอียด</p>
+                <p>การลงลายมือชื่อด้านล่างนี้ ถือว่าสมาชิกได้รับทราบและตกลงตามเงื่อนไขที่ระบุไว้ข้างต้นทุกประการ</p>
+            </div>
+        </div>
+
+        <!-- Footer Signatures Page 2 -->
+        <div class="signature-section">
+            <div class="sig-block">
+                <span>สมาชิกตะกาฟุล</span>
+                <div class="sig-line"></div>
+                <div class="sig-name">(<span
+                        class="doc_customerNameSig">....................................................</span>)</div>
+            </div>
+            <div class="sig-block">
+                <span>พนักงานสมายแคร์</span>
+                <div class="sig-line"></div>
+                <div class="sig-name">(<span
+                        class="doc_staffNameSig">....................................................</span>)</div>
+            </div>
+            <div class="sig-block">
+                <span>ผู้อนุมัติ</span>
+                <div class="sig-line"></div>
+                <div class="sig-name">(....................................................)</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id');
+
+            if (!id) {
+                alert('ไม่พบรหัสรายการ');
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/warranties/${id}`);
+                const data = await res.json();
+
+                if (!res.ok) throw new Error(data.message);
+
+                // Format Date Helper
+                const formatThaiDate = (dateStr) => {
+                    if (!dateStr) return '';
+                    const d = new Date(dateStr);
+                    return d.toLocaleDateString('th-TH', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                    });
+                };
+
+                // Fill Dynamic Content
+                const updateAll = (selector, text) => {
+                    document.querySelectorAll(selector).forEach(el => el.textContent = text);
+                };
+
+                // Fill Header & General Info
+                const todayThai = formatThaiDate(new Date());
+                updateAll('.doc_currentDate', todayThai);
+
+                document.getElementById('doc_memberId').textContent = data.memberId;
+                document.getElementById('doc_firstName').textContent = data.customer.firstName;
+                document.getElementById('doc_lastName').textContent = data.customer.lastName;
+                document.getElementById('doc_phone').textContent = data.customer.phone;
+                document.getElementById('doc_age').textContent = data.customer.age;
+                document.getElementById('doc_address').textContent = data.customer.address;
+
+                // Device Details
+                document.getElementById('doc_deviceType').textContent = data.device.type;
+                document.getElementById('doc_deviceType_sub').textContent = data.device.type;
+                document.getElementById('doc_model').textContent = data.device.model;
+                document.getElementById('doc_color').textContent = data.device.color;
+                document.getElementById('doc_capacity').textContent = data.device.capacity;
+                document.getElementById('doc_serial').textContent = data.device.serial;
+                document.getElementById('doc_imei').textContent = data.device.imei || '-';
+                document.getElementById('doc_deviceValue').textContent = data.device.deviceValue ? data.device.deviceValue.toLocaleString() : '-';
+                document.getElementById('doc_officialWarrantyEnd').textContent = formatThaiDate(data.device.officialWarrantyEnd);
+
+                // Periods
+                document.getElementById('doc_startDate').textContent = formatThaiDate(data.warrantyDates.start);
+                document.getElementById('doc_endDate').textContent = formatThaiDate(data.warrantyDates.end);
+
+                const startTime = new Date(data.warrantyDates.start);
+                const endTime = new Date(data.warrantyDates.end);
+                document.getElementById('doc_startTime').textContent = startTime.getHours().toString().padStart(2, '0') + ':' + startTime.getMinutes().toString().padStart(2, '0');
+                document.getElementById('doc_endTime').textContent = endTime.getHours().toString().padStart(2, '0') + ':' + endTime.getMinutes().toString().padStart(2, '0');
+
+                // Section 4 & 6 Package details
+                const deviceValue = data.device.deviceValue || 0;
+                const packagePrice = data.package.price || 0;
+                document.getElementById('doc_packagePlan').textContent = data.package.plan;
+                document.getElementById('doc_packagePriceDisplay').textContent = `(${packagePrice.toLocaleString()}บาท)`;
+                document.getElementById('doc_packagePrice').textContent = deviceValue.toLocaleString();
+                document.getElementById('doc_packagePlan_sec6').textContent = data.package.plan;
+                document.getElementById('doc_packagePrice_sec6').textContent = packagePrice.toLocaleString();
+
+                // Payment Method & Coverage logic
+                if (data.payment.method === 'Installment') {
+                    document.getElementById('sec_5_2').style.display = 'flex';
+                    document.getElementById('sec_5_1').style.display = 'none';
+
+                    document.getElementById('doc_limit_1').textContent = Math.floor(deviceValue * 0.1).toLocaleString();
+                    document.getElementById('doc_limit_2').textContent = Math.floor(deviceValue * 0.3).toLocaleString();
+                    document.getElementById('doc_limit_3').textContent = deviceValue.toLocaleString();
+
+                    // Fill Installment Amounts
+                    data.payment.schedule.forEach(s => {
+                        const amtEl = document.getElementById(`doc_amt_${s.installmentNo}`);
+                        if (amtEl) amtEl.textContent = s.amount.toLocaleString();
+
+                        const statusEl = document.getElementById(`doc_status_${s.installmentNo}`);
+                        if (statusEl) {
+                            statusEl.textContent = s.status === 'Paid' ? 'ชำระแล้ว' : 'ยังไม่ได้ชำระ';
+                            if (s.status === 'Paid') statusEl.style.color = '#16a34a'; // Green
+                            else statusEl.style.color = '#dc2626'; // Red
+                        }
+                    });
+                } else {
+                    document.getElementById('sec_5_1').style.display = 'flex';
+                    document.getElementById('sec_5_2').style.display = 'none';
+                    document.getElementById('doc_fullPrice').textContent = packagePrice.toLocaleString();
+                    document.getElementById('doc_coverageAmount').textContent = deviceValue.toLocaleString();
+                }
+
+                // Signatures
+                updateAll('.doc_customerNameSig', `${data.customer.firstName} ${data.customer.lastName}`);
+                updateAll('.doc_staffNameSig', data.staffName);
+
+                // Auto Print
+                setTimeout(() => {
+                    window.print();
+                }, 1000);
+
+            } catch (err) {
+                console.error('Error loading data:', err);
+                alert('เกิดข้อผิดพลาดในการโหลดข้อมูล');
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smile | Warranty Registration</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">Smile<span>Care</span></div>
+            <h1>Warranty Registration</h1>
+            <p>Mobile Insurance for iPhone & iPad</p>
+        </header>
+
+        <form id="warrantyForm">
+            <!-- User Information -->
+            <section>
+                <div class="section-header">
+                    <span class="step-number">01</span>
+                    <h2>Member Information</h2>
+                </div>
+                <div class="grid-row">
+                    <div class="form-group full-width">
+                        <label for="memberId">Member ID</label>
+                        <input type="text" id="memberId" readonly class="readonly-field">
+                    </div>
+                    <div class="form-group">
+                        <label for="firstName">First Name</label>
+                        <input type="text" id="firstName" placeholder="John" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="lastName">Last Name</label>
+                        <input type="text" id="lastName" placeholder="Doe" required>
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="address">Address</label>
+                        <textarea id="address" placeholder="Enter your full address" rows="3" required></textarea>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Device Information -->
+            <section>
+                <div class="section-header">
+                    <span class="step-number">02</span>
+                    <h2>Device Details</h2>
+                </div>
+                <div class="grid-row">
+                    <div class="form-group">
+                        <label for="productType">Product Type</label>
+                        <select id="productType" required>
+                            <option value="" disabled selected>Select Type</option>
+                            <option value="iPhone">iPhone</option>
+                            <option value="iPad">iPad</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="model">Model</label>
+                        <input type="text" id="model" placeholder="e.g. iPhone 15 Pro" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="color">Color</label>
+                        <input type="text" id="color" placeholder="Natural Titanium" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="capacity">Capacity</label>
+                        <select id="capacity" required>
+                            <option value="" disabled selected>Select Capacity</option>
+                            <option value="128GB">128GB</option>
+                            <option value="256GB">256GB</option>
+                            <option value="512GB">512GB</option>
+                            <option value="1TB">1TB</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="serialNumber">Serial Number</label>
+                        <input type="text" id="serialNumber" placeholder="Enter Serial Number" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="imei">IMEI</label>
+                        <input type="text" id="imei" placeholder="Enter IMEI" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="deviceValue">Device Value (THB)</label>
+                        <input type="number" id="deviceValue" placeholder="e.g. 45000" required>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Warranty & Payment -->
+            <section>
+                <div class="section-header">
+                    <span class="step-number">03</span>
+                    <h2>Warranty & Coverage</h2>
+                </div>
+                <div class="grid-row">
+                    <div class="form-group">
+                        <label for="package">Package</label>
+                        <select id="package" required>
+                            <option value="" disabled selected>Select Plan</option>
+                            <option value="Plan A">Plan A</option>
+                            <option value="Plan B">Plan B</option>
+                            <option value="Plan C">Plan C</option>
+                            <option value="Plan D">Plan D</option>
+                            <option value="Plan a">Plan a</option>
+                            <option value="Plan b">Plan b</option>
+                            <option value="Plan c">Plan c</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="startDate">Start Date</label>
+                        <input type="date" id="startDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="endDate">End Date</label>
+                        <input type="date" id="endDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="remainingDays">Remaining Days</label>
+                        <input type="number" id="remainingDays" readonly class="readonly-field">
+                    </div>
+                </div>
+
+                <!-- NEW: Pricing Summary -->
+                <div id="pricingSummary" class="pricing-summary">
+                    <div class="price-row">
+                        <span>Base Package Price:</span>
+                        <span id="packagePriceText">0 THB</span>
+                    </div>
+                    <div class="price-row total">
+                        <span>Total Amount Due:</span>
+                        <span id="totalPriceText">0 THB</span>
+                    </div>
+                </div>
+
+                <div class="form-group radio-group">
+                    <label>Payment Method</label>
+                    <div class="radio-options">
+                        <label class="radio-label">
+                            <input type="radio" name="paymentMethod" value="Full Payment" checked>
+                            <span class="radio-custom"></span>
+                            Full Payment
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="paymentMethod" value="Installment">
+                            <span class="radio-custom"></span>
+                            Installment (3 Months)
+                        </label>
+                    </div>
+                </div>
+
+                <!-- NEW: Installment Table Preview -->
+                <div id="installmentContainer" class="installment-preview" style="display: none;">
+                    <h3>Installment Schedule Preview</h3>
+                    <table class="preview-table">
+                        <thead>
+                            <tr>
+                                <th>No.</th>
+                                <th>Amount (THB)</th>
+                                <th>Due Date</th>
+                                <th>Grace Period Ends</th>
+                            </tr>
+                        </thead>
+                        <tbody id="installmentBody">
+                            <!-- Injected via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <div class="form-actions">
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    <span>Submit Registration</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="modal">
+        <div class="modal-content">
+            <div class="success-icon">✓</div>
+            <h2>Registration Successful!</h2>
+            <p>Your warranty registration has been submitted.</p>
+            <button id="closeModal">Close</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
