@@ -204,17 +204,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             return `
                 <tr>
-                    <td style="font-weight: 600;">${r.memberId}</td>
-                    <td>${r.customer.firstName} ${r.customer.lastName}</td>
-                    <td>${r.customer.phone}</td>
-                    <td>${r.device.model}</td>
-                    <td><span style="color: var(--primary); font-weight: 500;">${r.package.plan}</span></td>
-                    <td>${timeRemainingText}</td>
-                    <td>${r.staffName}</td>
-                    <td>${statusBadge}</td>
-                    <td>${paymentStatus}</td>
-                    <td>
-                    <div style="display: flex; gap: 0.5rem;">
+                    <td data-label="รหัสสมาชิก" style="font-weight: 600;">${r.memberId}</td>
+                    <td data-label="ชื่อลูกค้า">${r.customer.firstName} ${r.customer.lastName}</td>
+                    <td data-label="เบอร์โทรศัพท์">${r.customer.phone}</td>
+                    <td data-label="รุ่นอุปกรณ์">${r.device.model}</td>
+                    <td data-label="แพ็กเกจ"><span style="color: var(--primary); font-weight: 500;">${r.package.plan}</span></td>
+                    <td data-label="ประกันคงเหลือ">${timeRemainingText}</td>
+                    <td data-label="ผู้บันทึก">${r.staffName}</td>
+                    <td data-label="สถานะ">${statusBadge}</td>
+                    <td data-label="การชำระเงิน">${paymentStatus}</td>
+                    <td data-label="จัดการ">
+                    <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
                         <button class="edit-btn" data-id="${r._id}" title="แก้ไขข้อมูล">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                         </button>
@@ -659,6 +659,30 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('searchInput').addEventListener('input', applyFilters);
     document.getElementById('statusFilter').addEventListener('change', applyFilters);
     document.getElementById('paymentFilter').addEventListener('change', applyFilters);
+
+    // --- MOBILE MENU LOGIC ---
+    const menuToggle = document.getElementById('mobileMenuBtn');
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+    if (menuToggle && sidebar && sidebarOverlay) {
+        const toggleMenu = () => {
+            sidebar.classList.toggle('active');
+            sidebarOverlay.classList.toggle('active');
+        };
+
+        menuToggle.addEventListener('click', toggleMenu);
+        sidebarOverlay.addEventListener('click', toggleMenu);
+
+        // Close menu when navigation links are clicked (on mobile)
+        sidebar.querySelectorAll('nav a').forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 1024) {
+                    toggleMenu();
+                }
+            });
+        });
+    }
 
     // --- INITIALIZATION ---
     if (currentUser) {

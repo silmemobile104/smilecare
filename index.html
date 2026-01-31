@@ -243,8 +243,24 @@
 
         <!-- Dashboard View -->
         <div id="dashboardView" class="view dashboard-page" style="display: none;">
+            <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+            <!-- Mobile Header Bar -->
+            <div class="mobile-header">
+                <button class="mobile-menu-btn" id="mobileMenuBtn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+                <div class="mobile-logo-text">Smile<span>Care</span></div>
+                <div style="width: 40px;"></div> <!-- Spacer -->
+            </div>
+
             <div class="dashboard-container">
-                <aside class="sidebar">
+                <aside class="sidebar" id="sidebar">
                     <img src="logo_smilecare.png" alt="SmileCare Logo" class="logo">
                     <nav>
                         <a href="#" class="active">
