@@ -7,32 +7,33 @@
     <title>Smile | Care</title>
     <link rel="icon" type="image/png" href="logo_smilecare.png">
     <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Anuphan:wght@300;400;500;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&family=Outfit:wght@400;600;700&display=swap"
         rel="stylesheet">
     <style>
         :root {
-            --thai-font: 'Anuphan', sans-serif;
+            --thai-font-title: 'Kanit', sans-serif;
+            --thai-font-body: 'Sarabun', sans-serif;
             --main-font: 'Outfit', sans-serif;
         }
 
         body {
-            font-family: var(--thai-font);
+            font-family: var(--thai-font-body);
         }
 
-        .logo {
-            font-family: var(--main-font);
-        }
-
+        .logo-text,
         h1,
         h2,
         h3,
         .submit-btn,
-        .add-btn {
-            font-family: var(--thai-font);
-            font-weight: 600;
+        .add-btn,
+        .sidebar nav a {
+            font-family: var(--thai-font-title);
+            font-weight: 500;
         }
+
 
         .payment-status-section {
             margin-top: 2rem;
@@ -389,7 +390,7 @@
         <!-- Registration View -->
         <div id="registrationView" class="view" style="display: none; padding: 2rem 1rem;">
             <div class="container">
-                <header>
+                <header class="form-header">
                     <img src="logo_smilecare.png" alt="SmileCare Logo" class="logo">
                     <h1 id="regFormTitle">ลงทะเบียนประกันภัย</h1>
                     <p id="regFormSubtitle">ประกันคุ้มครองมือถือ iPhone & iPad</p>

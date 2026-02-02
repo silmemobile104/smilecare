@@ -178,11 +178,12 @@ document.addEventListener('DOMContentLoaded', () => {
             let paymentStatus = '';
             if (r.payment.method === 'Full Payment') {
                 const statusText = r.payment.status === 'Paid' ? 'ชำระแล้ว' : 'ค้างชำระ';
-                paymentStatus = `<span class="status-badge ${r.payment.status === 'Paid' ? 'status-active' : 'status-expired'}">${statusText}</span>`;
+                const statusClass = r.payment.status === 'Paid' ? 'status-paid' : 'status-pending';
+                paymentStatus = `<span class="status-badge ${statusClass}">${statusText}</span>`;
             } else {
                 const paidCount = r.payment.schedule.filter(s => s.status === 'Paid').length;
                 const totalCount = 3;
-                const statusClass = paidCount === totalCount ? 'status-active' : 'status-pending';
+                const statusClass = paidCount === totalCount ? 'status-paid' : 'status-pending';
                 paymentStatus = `<span class="status-badge ${statusClass}">ชำระแล้ว ${paidCount}/${totalCount}</span>`;
             }
 
