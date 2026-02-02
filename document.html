@@ -271,6 +271,11 @@
                 <div class="date-section">
                     วันที่ <span class="doc_currentDate">.....................................................</span>
                 </div>
+
+            </div>
+            <div>
+                <span class="label">จากร้าน</span>
+                <span id="doc_shopName" style="width: 200px;"></span>
             </div>
 
             <div class="form-container">
@@ -281,7 +286,9 @@
                         <span class="dotted-line" id="doc_memberId" style="width: 150px;"></span>
                     </div>
                     <div class="col w-60">
-                        <span class="label" style="font-weight: bold;">สัญญาตะกาฟุลอุบัติเหตุสำหรับมือถือ</span>
+                        <span class="label" style="font-weight: bold;">สัญญาตะกาฟุลอุบัติเหตุสำหรับโทรศัพท์มือถือ</span>
+                        <span class="label">กธ.</span>
+                        <span id="doc_policyNumber" style="width: 120px; font-weight: bold;"></span>
                     </div>
                 </div>
 
@@ -562,6 +569,7 @@
                                         บาท
                                     </p>
                                     <p style="margin: 5px 0;">ไม่มีค่าธรรมเนียมซ่อม</p>
+                                    มูลค่าความคุ้มครอง: <span id="doc_deviceValue_sec6">-</span> บาท
                                 </div>
                             </div>
                         </div>
@@ -634,6 +642,8 @@
                 const todayThai = formatThaiDate(new Date());
                 updateAll('.doc_currentDate', todayThai);
 
+                document.getElementById('doc_policyNumber').textContent = data.policyNumber || '-';
+                document.getElementById('doc_shopName').textContent = data.shopName || '-';
                 document.getElementById('doc_memberId').textContent = data.memberId;
                 document.getElementById('doc_firstName').textContent = data.customer.firstName;
                 document.getElementById('doc_lastName').textContent = data.customer.lastName;
@@ -669,6 +679,7 @@
                 document.getElementById('doc_packagePrice').textContent = deviceValue.toLocaleString();
                 document.getElementById('doc_packagePlan_sec6').textContent = data.package.plan;
                 document.getElementById('doc_packagePrice_sec6').textContent = packagePrice.toLocaleString();
+                document.getElementById('doc_deviceValue_sec6').textContent = deviceValue.toLocaleString();
 
                 // Payment Method & Coverage logic
                 if (data.payment.method === 'Installment') {
@@ -686,9 +697,14 @@
 
                         const statusEl = document.getElementById(`doc_status_${s.installmentNo}`);
                         if (statusEl) {
-                            statusEl.textContent = s.status === 'Paid' ? 'ชำระแล้ว' : 'ยังไม่ได้ชำระ';
-                            if (s.status === 'Paid') statusEl.style.color = '#16a34a'; // Green
-                            else statusEl.style.color = '#dc2626'; // Red
+                            if (s.status === 'Paid') {
+                                const paidDateThai = s.paidDate ? formatThaiDate(s.paidDate) : '-';
+                                statusEl.textContent = `ชำระแล้ว ${paidDateThai}`;
+                                statusEl.style.color = '#16a34a'; // Green
+                            } else {
+                                statusEl.textContent = 'ยังไม่ได้ชำระ';
+                                statusEl.style.color = '#dc2626'; // Red
+                            }
                         }
                     });
                 } else {

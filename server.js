@@ -14,12 +14,21 @@ app.use(express.static(path.join(__dirname)));
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI)
-    .then(() => console.log('Connected to MongoDB Atlas'))
+    .then(() => {
+        console.log('Connected to MongoDB Atlas');
+        // Drop unique index on memberId if it exists (to allow multi-package per member)
+        mongoose.connection.collection('warranties').dropIndex('memberId_1').catch(err => {
+            // Ignore error if index doesn't exist
+            if (err.code !== 27) console.log('MemberId index already cleaned or not found');
+        });
+    })
     .catch(err => console.error('MongoDB connection error:', err));
 
 // Mongoose Schema
 const WarrantySchema = new mongoose.Schema({
-    memberId: { type: String, unique: true, index: true },
+    policyNumber: { type: String, unique: true, index: true },
+    memberId: { type: String, index: true },
+    shopName: String,
     staffName: String,
     customer: {
         firstName: String,
@@ -63,6 +72,28 @@ const WarrantySchema = new mongoose.Schema({
 }, { timestamps: true });
 
 const Warranty = mongoose.model('Warranty', WarrantySchema);
+
+// Member Schema
+const MemberSchema = new mongoose.Schema({
+    memberId: { type: String, unique: true, index: true, required: true },
+    firstName: { type: String, required: true },
+    lastName: { type: String, required: true },
+    phone: { type: String, unique: true, index: true, required: true },
+    birthdate: { type: Date },
+    idCardAddress: { type: String },
+    shippingAddress: { type: String }
+}, { timestamps: true });
+
+const Member = mongoose.model('Member', MemberSchema);
+
+// Shop Schema
+const ShopSchema = new mongoose.Schema({
+    shopId: { type: String, unique: true, index: true, required: true },
+    shopName: { type: String, required: true },
+    location: { type: String }
+}, { timestamps: true });
+
+const Shop = mongoose.model('Shop', ShopSchema);
 
 // Staff Schema
 const StaffSchema = new mongoose.Schema({
@@ -140,14 +171,22 @@ app.post('/api/warranties', async (req, res) => {
     try {
         const { memberId, device } = req.body;
 
-        // Server-side validation
-        const existingId = await Warranty.findOne({ memberId });
-        if (existingId) return res.status(400).json({ message: 'Member ID already exists' });
+        // Generate Unique 7-digit Policy Number
+        let policyNumber;
+        let isUnique = false;
+        while (!isUnique) {
+            policyNumber = Math.floor(1000000 + Math.random() * 9000000).toString(); // 7 digits
+            const existingPolicy = await Warranty.findOne({ policyNumber });
+            if (!existingPolicy) isUnique = true;
+        }
 
         const existingSerial = await Warranty.findOne({ 'device.serial': device.serial });
-        if (existingSerial) return res.status(400).json({ message: 'Serial Number already registered' });
+        if (existingSerial) return res.status(400).json({ message: 'เรือนนี้ได้ลงทะเบียนไปแล้ว (Serial Number already registered)' });
 
-        const newWarranty = new Warranty(req.body);
+        const newWarranty = new Warranty({
+            ...req.body,
+            policyNumber
+        });
         await newWarranty.save();
         res.status(201).json(newWarranty);
     } catch (err) {
@@ -212,11 +251,159 @@ app.patch('/api/warranties/:id/payment', async (req, res) => {
     }
 });
 
-// Serve frontend SPA
+// Member API Routes
+
+// Get all members
+app.get('/api/members', async (req, res) => {
+    try {
+        const members = await Member.find().sort({ createdAt: -1 });
+        res.json(members);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Create new member
+app.post('/api/members', async (req, res) => {
+    try {
+        const { phone } = req.body;
+        const existingMember = await Member.findOne({ phone });
+        if (existingMember) {
+            return res.status(400).json({ success: false, message: 'เบอร์โทรศัพท์นี้ถูกใช้งานแล้ว' });
+        }
+
+        // Generate Unique Member ID: SMCxxxxxx
+        let memberId;
+        let isUnique = false;
+        while (!isUnique) {
+            const randomNum = Math.floor(100000 + Math.random() * 900000); // 6 digits
+            memberId = `SMC${randomNum}`;
+            const existingId = await Member.findOne({ memberId });
+            if (!existingId) isUnique = true;
+        }
+
+        const newMember = new Member({ ...req.body, memberId });
+        await newMember.save();
+        res.status(201).json({ success: true, member: newMember });
+    } catch (err) {
+        res.status(400).json({ success: false, message: err.message });
+    }
+});
+
+// Lookup member by phone or memberId
+app.get('/api/members/lookup', async (req, res) => {
+    try {
+        const { query } = req.query;
+        if (!query) return res.status(400).json({ success: false, message: 'กรุณาระบุข้อมูลสำหรับค้นหา' });
+
+        const member = await Member.findOne({
+            $or: [
+                { phone: query },
+                { memberId: query }
+            ]
+        });
+
+        if (!member) return res.status(404).json({ success: false, message: 'ไม่พบข้อมูลสมาชิก' });
+        res.json({ success: true, member });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+// Get single member
+app.get('/api/members/:id', async (req, res) => {
+    try {
+        const member = await Member.findById(req.params.id);
+        if (!member) return res.status(404).json({ success: false, message: 'ไม่พบข้อมูลสมาชิก' });
+        res.json(member);
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+// Update member
+app.put('/api/members/:id', async (req, res) => {
+    try {
+        const { phone } = req.body;
+        // Check if phone unique but not current member
+        const existingMember = await Member.findOne({ phone, _id: { $ne: req.params.id } });
+        if (existingMember) {
+            return res.status(400).json({ success: false, message: 'เบอร์โทรศัพท์นี้ถูกใช้งานโดยสมาชิกท่านอื่นแล้ว' });
+        }
+
+        const updatedMember = await Member.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            { new: true }
+        );
+        if (!updatedMember) return res.status(404).json({ success: false, message: 'ไม่พบข้อมูลสมาชิก' });
+        res.json({ success: true, member: updatedMember });
+    } catch (err) {
+        res.status(400).json({ success: false, message: err.message });
+    }
+});
+
+// --- Shops API ---
+
+// Get all shops
+app.get('/api/shops', async (req, res) => {
+    try {
+        const shops = await Shop.find().sort({ createdAt: -1 });
+        res.json(shops);
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+// Create new shop
+app.post('/api/shops', async (req, res) => {
+    try {
+        // Generate Unique Shop ID: SMP + 6 digits
+        let shopId;
+        let isUnique = false;
+        while (!isUnique) {
+            const random = Math.floor(100000 + Math.random() * 900000).toString();
+            shopId = 'SMP' + random;
+            const existing = await Shop.findOne({ shopId });
+            if (!existing) isUnique = true;
+        }
+
+        const newShop = new Shop({
+            ...req.body,
+            shopId
+        });
+        await newShop.save();
+        res.status(201).json({ success: true, shop: newShop });
+    } catch (err) {
+        res.status(400).json({ success: false, message: err.message });
+    }
+});
+
+// Update shop
+app.put('/api/shops/:id', async (req, res) => {
+    try {
+        const updatedShop = await Shop.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            { new: true }
+        );
+        if (!updatedShop) return res.status(404).json({ success: false, message: 'ไม่พบข้อมูลร้านค้า' });
+        res.json({ success: true, shop: updatedShop });
+    } catch (err) {
+        res.status(400).json({ success: false, message: err.message });
+    }
+});
+
+// Serve frontend SPA (Fallback)
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-});
+// Server Startup Section (Usually at the end)
+const startServer = () => {
+    app.listen(PORT, () => {
+        console.log(`Server running on http://localhost:${PORT}`);
+    });
+};
+
+startServer();

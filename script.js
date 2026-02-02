@@ -20,9 +20,41 @@ document.addEventListener('DOMContentLoaded', () => {
         Object.keys(views).forEach(key => {
             if (views[key]) views[key].style.display = 'none';
         });
-        if (views[viewName]) {
+
+        // Sub-view logic for dashboard/members
+        const shopsMain = document.getElementById('shopsMain');
+        const dashNavLink = document.getElementById('dashNavLink');
+        const membersNavLink = document.getElementById('membersNavLink');
+        const shopsNavLink = document.getElementById('shopsNavLink');
+
+        if (viewName === 'dashboard' || viewName === 'members' || viewName === 'shops') {
+            views.dashboard.style.display = 'block';
+
+            // Hide all sub-views first
+            dashMain.style.display = 'none';
+            membersMain.style.display = 'none';
+            shopsMain.style.display = 'none';
+
+            // Remove active class from all nav links
+            if (dashNavLink) dashNavLink.classList.remove('active');
+            if (membersNavLink) membersNavLink.classList.remove('active');
+            if (shopsNavLink) shopsNavLink.classList.remove('active');
+
+            if (viewName === 'dashboard') {
+                dashMain.style.display = 'block';
+                if (dashNavLink) dashNavLink.classList.add('active');
+                fetchWarranties();
+            } else if (viewName === 'members') {
+                membersMain.style.display = 'block';
+                if (membersNavLink) membersNavLink.classList.add('active');
+                fetchMembers();
+            } else if (viewName === 'shops') {
+                shopsMain.style.display = 'block';
+                if (shopsNavLink) shopsNavLink.classList.add('active');
+                fetchShops();
+            }
+        } else if (views[viewName]) {
             views[viewName].style.display = 'block';
-            if (viewName === 'dashboard') fetchWarranties();
             if (viewName === 'registration') initRegistrationForm();
         }
     }
@@ -101,7 +133,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (initialElem) initialElem.textContent = currentUser.staffName.charAt(0);
     }
 
-    const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', () => {
             localStorage.removeItem('smilecare_staff_session');
@@ -109,6 +140,16 @@ document.addEventListener('DOMContentLoaded', () => {
             showView('login');
         });
     }
+
+    // --- NAVIGATION LINKS ---
+    const dashNavLink = document.getElementById('dashNavLink');
+    if (dashNavLink) dashNavLink.addEventListener('click', (e) => { e.preventDefault(); showView('dashboard'); });
+
+    const membersNavLink = document.getElementById('membersNavLink');
+    if (membersNavLink) membersNavLink.addEventListener('click', (e) => { e.preventDefault(); showView('members'); });
+
+    const shopsNavLink = document.getElementById('shopsNavLink');
+    if (shopsNavLink) shopsNavLink.addEventListener('click', (e) => { e.preventDefault(); showView('shops'); });
 
     // --- DASHBOARD LOGIC ---
     async function fetchWarranties() {
@@ -131,7 +172,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // 1. Search filter
             const fullName = `${r.customer.firstName} ${r.customer.lastName}`.toLowerCase();
             const matchesSearch = !searchTerm ||
-                r.memberId.toLowerCase().includes(searchTerm) ||
+                (r.policyNumber && r.policyNumber.includes(searchTerm)) ||
+                (r.memberId && r.memberId.toLowerCase().includes(searchTerm)) ||
                 fullName.includes(searchTerm) ||
                 r.customer.phone.includes(searchTerm);
 
@@ -205,12 +247,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             return `
                 <tr>
-                    <td data-label="รหัสสมาชิก" style="font-weight: 600;">${r.memberId}</td>
+                    <td data-label="เลขกรมธรรม์" style="font-weight: 600; color: var(--primary);">${r.policyNumber || '-'}</td>
+                    <td data-label="รหัสสมาชิก">${r.memberId || '-'}</td>
                     <td data-label="ชื่อลูกค้า">${r.customer.firstName} ${r.customer.lastName}</td>
                     <td data-label="เบอร์โทรศัพท์">${r.customer.phone}</td>
                     <td data-label="รุ่นอุปกรณ์">${r.device.model}</td>
                     <td data-label="แพ็กเกจ"><span style="color: var(--primary); font-weight: 500;">${r.package.plan}</span></td>
                     <td data-label="ประกันคงเหลือ">${timeRemainingText}</td>
+                    <td data-label="ร้านค้า">${r.shopName || '-'}</td>
                     <td data-label="ผู้บันทึก">${r.staffName}</td>
                     <td data-label="สถานะ">${statusBadge}</td>
                     <td data-label="การชำระเงิน">${paymentStatus}</td>
@@ -265,6 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showView('registration');
 
             // Populate Form
+            document.getElementById('policyNumber').value = data.policyNumber || '';
             document.getElementById('memberId').value = data.memberId;
             document.getElementById('firstName').value = data.customer.firstName || '';
             document.getElementById('lastName').value = data.customer.lastName || '';
@@ -298,6 +343,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             updateRemainingDays();
             updatePaymentUI();
+            populateShopsDropdown(data.shopName);
 
             // Show Payment Management Section
             const pmSection = document.getElementById('paymentManagementSection');
@@ -320,14 +366,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.getElementById('regFormTitle').textContent = 'ลงทะเบียนประกันภัย';
         document.getElementById('regFormSubtitle').textContent = 'ประกันคุ้มครองมือถือ iPhone & iPad';
-        document.getElementById('memberId').readOnly = true;
+        document.getElementById('policyNumber').value = '';
+        document.getElementById('memberId').readOnly = false;
+        document.getElementById('memberId').value = ''; // Will be populated by lookup or manual entry
         document.getElementById('paymentManagementSection').style.display = 'none';
         document.getElementById('initialPaymentCheck').style.display = 'block';
         const initialPaidCheck = document.getElementById('initialPaidCheck');
         if (initialPaidCheck) initialPaidCheck.checked = false;
-
-        const memberIdInput = document.getElementById('memberId');
-        memberIdInput.value = 'SMC' + Math.floor(Math.random() * 900000 + 100000);
 
         // Auto-set dates
         const now = new Date();
@@ -341,6 +386,31 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleIMEIField();
         updateRemainingDays();
         updatePaymentUI();
+        populateShopsDropdown();
+    }
+
+    async function populateShopsDropdown(selectedShop = '') {
+        const shopSelect = document.getElementById('shopName');
+        if (!shopSelect) return;
+
+        try {
+            const res = await fetch('/api/shops');
+            const shops = await res.json();
+
+            shopSelect.innerHTML = '<option value="" disabled selected>เลือกสรรร้านค้า</option>';
+            shops.forEach(shop => {
+                const option = document.createElement('option');
+                option.value = shop.shopName;
+                option.textContent = shop.shopName;
+                if (selectedShop && shop.shopName === selectedShop) {
+                    option.selected = true;
+                }
+                shopSelect.appendChild(option);
+            });
+        } catch (err) {
+            console.error('Populate shops error:', err);
+            shopSelect.innerHTML = '<option value="" disabled selected>ไม่สามารถโหลดข้อมูลร้านค้าได้</option>';
+        }
     }
 
     function toggleIMEIField() {
@@ -514,6 +584,45 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('package').addEventListener('change', updatePaymentUI);
     document.getElementsByName('paymentMethod').forEach(r => r.addEventListener('change', updatePaymentUI));
 
+    async function handleMemberLookup(query) {
+        if (!query || query.length < 5) return;
+
+        try {
+            const res = await fetch(`/api/members/lookup?query=${query}`);
+            const data = await res.json();
+            if (data.success) {
+                const member = data.member;
+                document.getElementById('memberId').value = member.memberId;
+                document.getElementById('firstName').value = member.firstName;
+                document.getElementById('lastName').value = member.lastName;
+                document.getElementById('phone').value = member.phone;
+                document.getElementById('address').value = member.shippingAddress || member.idCardAddress || '';
+                if (member.birthdate) {
+                    const dob = new Date(member.birthdate);
+                    document.getElementById('dobDay').value = dob.getDate();
+                    document.getElementById('dobMonth').value = dob.getMonth() + 1;
+                    document.getElementById('dobYear').value = dob.getFullYear() + 543;
+                    updateAge();
+                }
+                // Optional: visual feedback
+                document.getElementById('memberId').style.borderColor = 'var(--success)';
+            }
+        } catch (err) {
+            console.error('Member lookup error:', err);
+        }
+    }
+
+    // Member auto-lookup logic in Registration Form
+    const phoneInput = document.getElementById('phone');
+    if (phoneInput) {
+        phoneInput.addEventListener('blur', () => handleMemberLookup(phoneInput.value.trim()));
+    }
+
+    const memberIdInputReg = document.getElementById('memberId');
+    if (memberIdInputReg) {
+        memberIdInputReg.addEventListener('blur', () => handleMemberLookup(memberIdInputReg.value.trim()));
+    }
+
     document.getElementById('backToDashBtn').addEventListener('click', () => showView('dashboard'));
 
     document.getElementById('warrantyForm').addEventListener('submit', async (e) => {
@@ -595,6 +704,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const payload = {
             memberId: document.getElementById('memberId').value,
+            shopName: document.getElementById('shopName').value,
             staffName: currentUser.staffName,
             customer: {
                 firstName: document.getElementById('firstName').value,
@@ -661,6 +771,138 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('statusFilter').addEventListener('change', applyFilters);
     document.getElementById('paymentFilter').addEventListener('change', applyFilters);
 
+    // --- MEMBERS LOGIC ---
+    async function fetchMembers() {
+        try {
+            const res = await fetch('/api/members');
+            const data = await res.json();
+            renderMembers(data);
+        } catch (err) {
+            console.error('Fetch members error:', err);
+        }
+    }
+
+    function renderMembers(members) {
+        const body = document.getElementById('membersBody');
+        const empty = document.getElementById('membersEmptyState');
+
+        if (members.length === 0) {
+            empty.style.display = 'block';
+            body.innerHTML = '';
+            return;
+        }
+
+        empty.style.display = 'none';
+        body.innerHTML = members.map(m => `
+            <tr>
+                <td data-label="รหัสสมาชิก" style="font-weight: 600;">${m.memberId || '-'}</td>
+                <td data-label="ชื่อ-นามสกุล">${m.firstName} ${m.lastName}</td>
+                <td data-label="เบอร์โทรศัพท์">${m.phone}</td>
+                <td data-label="ที่อยู่ตามบัตร">${m.idCardAddress || '-'}</td>
+                <td data-label="จัดการ">
+                    <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                        <button class="edit-member-btn edit-btn" data-id="${m._id}" title="แก้ไข">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+
+        // Add event listeners for edit buttons
+        body.querySelectorAll('.edit-member-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-id');
+                editMember(id);
+            });
+        });
+    }
+
+    async function editMember(id) {
+        try {
+            const res = await fetch(`/api/members/${id}`);
+            const member = await res.json();
+
+            document.getElementById('memberModalTitle').textContent = 'แก้ไขข้อมูลสมาชิก';
+            document.getElementById('editMemberId').value = member._id;
+            document.getElementById('memberIdDisplay').value = member.memberId;
+            document.getElementById('memberFirstName').value = member.firstName;
+            document.getElementById('memberLastName').value = member.lastName;
+            document.getElementById('memberPhone').value = member.phone;
+            document.getElementById('memberBirthdate').value = member.birthdate ? member.birthdate.split('T')[0] : '';
+            document.getElementById('memberIdCardAddress').value = member.idCardAddress || '';
+            document.getElementById('memberShippingAddress').value = member.shippingAddress || '';
+
+            document.getElementById('memberModal').style.display = 'flex';
+        } catch (err) {
+            console.error('Fetch member error:', err);
+            alert('ไม่สามารถดึงข้อมูลสมาชิกได้');
+        }
+    }
+
+    const addMemberBtn = document.getElementById('addMemberBtn');
+    if (addMemberBtn) {
+        addMemberBtn.addEventListener('click', () => {
+            document.getElementById('memberModalTitle').textContent = 'เพิ่มข้อมูลสมาชิก';
+            document.getElementById('memberForm').reset();
+            document.getElementById('editMemberId').value = '';
+            document.getElementById('memberIdDisplay').value = ''; // Clear display
+            document.getElementById('memberModal').style.display = 'flex';
+        });
+    }
+
+    const closeMemberModal = document.getElementById('closeMemberModal');
+    if (closeMemberModal) {
+        closeMemberModal.addEventListener('click', () => {
+            document.getElementById('memberModal').style.display = 'none';
+        });
+    }
+
+    const copyAddressBtn = document.getElementById('copyAddressBtn');
+    if (copyAddressBtn) {
+        copyAddressBtn.addEventListener('click', () => {
+            const idAddress = document.getElementById('memberIdCardAddress').value;
+            document.getElementById('memberShippingAddress').value = idAddress;
+        });
+    }
+
+    const memberForm = document.getElementById('memberForm');
+    if (memberForm) {
+        memberForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const editId = document.getElementById('editMemberId').value;
+            const payload = {
+                firstName: document.getElementById('memberFirstName').value,
+                lastName: document.getElementById('memberLastName').value,
+                phone: document.getElementById('memberPhone').value,
+                birthdate: document.getElementById('memberBirthdate').value,
+                idCardAddress: document.getElementById('memberIdCardAddress').value,
+                shippingAddress: document.getElementById('memberShippingAddress').value
+            };
+
+            try {
+                const url = editId ? `/api/members/${editId}` : '/api/members';
+                const method = editId ? 'PUT' : 'POST';
+
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('memberModal').style.display = 'none';
+                    fetchMembers();
+                } else {
+                    alert(data.message || 'เกิดข้อผิดพลาด');
+                }
+            } catch (err) {
+                console.error('Submit member error:', err);
+                alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
+            }
+        });
+    }
+
     // --- MOBILE MENU LOGIC ---
     const menuToggle = document.getElementById('mobileMenuBtn');
     const sidebar = document.getElementById('sidebar');
@@ -683,6 +925,130 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
+    }
+
+    // --- SHOPS LOGIC ---
+    async function fetchShops() {
+        try {
+            const res = await fetch('/api/shops');
+            const data = await res.json();
+            renderShops(data);
+        } catch (err) {
+            console.error('Fetch shops error:', err);
+        }
+    }
+
+    function renderShops(shops) {
+        const body = document.getElementById('shopsBody');
+        const empty = document.getElementById('shopsEmptyState');
+
+        if (shops.length === 0) {
+            if (empty) empty.style.display = 'block';
+            body.innerHTML = '';
+            return;
+        }
+
+        if (empty) empty.style.display = 'none';
+        body.innerHTML = shops.map(s => `
+            <tr>
+                <td data-label="รหัสร้านค้า" style="font-weight: 600;">${s.shopId}</td>
+                <td data-label="ชื่อร้านค้า">${s.shopName}</td>
+                <td data-label="สถานที่ตั้ง">${s.location || '-'}</td>
+                <td data-label="จัดการ">
+                    <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                        <button class="edit-shop-btn edit-btn" data-id="${s._id}" title="แก้ไข">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+
+        // Add event listeners for edit buttons
+        document.querySelectorAll('.edit-shop-btn').forEach(btn => {
+            btn.addEventListener('click', () => editShop(btn.dataset.id));
+        });
+    }
+
+    const shopModal = document.getElementById('shopModal');
+    const shopForm = document.getElementById('shopForm');
+
+    const addShopBtn = document.getElementById('addShopBtn');
+    if (addShopBtn) {
+        addShopBtn.addEventListener('click', () => {
+            isEditMode = false;
+            shopForm.reset();
+            document.getElementById('editShopId').value = '';
+            document.getElementById('shopModalTitle').textContent = 'เพิ่มข้อมูลร้านค้า';
+            document.getElementById('shopIdDisplay').value = 'ออกโดยระบบอัตโนมัติ';
+            shopModal.style.display = 'flex';
+        });
+    }
+
+    const closeShopModal = document.getElementById('closeShopModal');
+    if (closeShopModal) {
+        closeShopModal.addEventListener('click', () => {
+            shopModal.style.display = 'none';
+        });
+    }
+
+    if (shopForm) {
+        shopForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const editId = document.getElementById('editShopId').value;
+            const payload = {
+                shopName: document.getElementById('shopName').value,
+                location: document.getElementById('shopLocation').value
+            };
+
+            try {
+                const url = editId ? `/api/shops/${editId}` : '/api/shops';
+                const method = editId ? 'PUT' : 'POST';
+
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    shopModal.style.display = 'none';
+                    fetchShops();
+                } else {
+                    alert('ข้อผิดพลาด: ' + (data.message || 'ไม่สามารถบันทึกข้อมูลได้'));
+                }
+            } catch (err) {
+                console.error('Shop save error:', err);
+            }
+        });
+    }
+
+    async function editShop(id) {
+        try {
+            const res = await fetch('/api/shops');
+            const shops = await res.json();
+            const shop = shops.find(s => s._id === id);
+
+            if (shop) {
+                isEditMode = true;
+                const editIdElem = document.getElementById('editShopId');
+                const titleElem = document.getElementById('shopModalTitle');
+                const idDisplayElem = document.getElementById('shopIdDisplay');
+                const nameElem = document.getElementById('shopName');
+                const locElem = document.getElementById('shopLocation');
+
+                if (editIdElem) editIdElem.value = shop._id;
+                if (titleElem) titleElem.textContent = 'แก้ไขข้อมูลร้านค้า';
+                if (idDisplayElem) idDisplayElem.value = shop.shopId;
+                if (nameElem) nameElem.value = shop.shopName;
+                if (locElem) locElem.value = shop.location || '';
+
+                shopModal.style.display = 'flex';
+            }
+        } catch (err) {
+            console.error('Edit shop error:', err);
+        }
     }
 
     // --- INITIALIZATION ---

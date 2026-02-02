@@ -264,7 +264,7 @@
                 <aside class="sidebar" id="sidebar">
                     <img src="logo_smilecare.png" alt="SmileCare Logo" class="logo">
                     <nav>
-                        <a href="#" class="active">
+                        <a href="#" id="dashNavLink" class="active">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <rect x="3" y="3" width="7" height="7"></rect>
@@ -272,7 +272,25 @@
                                 <rect x="14" y="14" width="7" height="7"></rect>
                                 <rect x="3" y="14" width="7" height="7"></rect>
                             </svg>
-                            แผงควบคุม
+                            แพ็กเกจ
+                        </a>
+                        <a href="#" id="membersNavLink">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
+                            สมาชิก
+                        </a>
+                        <a href="#" id="shopsNavLink">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                            </svg>
+                            ร้านค้า
                         </a>
                     </nav>
                     <div class="sidebar-footer">
@@ -295,7 +313,8 @@
                     </div>
                 </aside>
 
-                <main class="main-content">
+                <!-- Dashboard Main Content -->
+                <main id="dashMain" class="main-content">
                     <header class="dashboard-header">
                         <div class="header-titles">
                             <h1>รายการประกันเครื่องทั้งหมด</h1>
@@ -365,12 +384,14 @@
                         <table id="recordsTable">
                             <thead>
                                 <tr>
+                                    <th>เลขกรมธรรม์</th>
                                     <th>รหัสสมาชิก</th>
                                     <th>ชื่อลูกค้า</th>
                                     <th>เบอร์โทรศัพท์</th>
                                     <th>รุ่นอุปกรณ์</th>
                                     <th>แพ็กเกจ</th>
                                     <th>ประกันคงเหลือ</th>
+                                    <th>ร้านค้า</th>
                                     <th>ผู้บันทึก</th>
                                     <th>สถานะ</th>
                                     <th>การชำระเงิน</th>
@@ -384,213 +405,326 @@
                         </div>
                     </div>
                 </main>
-            </div>
-        </div>
 
-        <!-- Registration View -->
-        <div id="registrationView" class="view" style="display: none; padding: 2rem 1rem;">
-            <div class="container">
-                <header class="form-header">
-                    <img src="logo_smilecare.png" alt="SmileCare Logo" class="logo">
-                    <h1 id="regFormTitle">ลงทะเบียนประกันภัย</h1>
-                    <p id="regFormSubtitle">ประกันคุ้มครองมือถือ iPhone & iPad</p>
-                </header>
+                <!-- Members Main Content -->
+                <main id="membersMain" class="main-content" style="display: none;">
+                    <header class="dashboard-header">
+                        <div class="header-titles">
+                            <h1>ข้อมูลสมาชิก</h1>
+                            <p>จัดการข้อมูลลูกค้าและที่อยู่สำหรับจัดส่ง</p>
+                        </div>
+                        <button id="addMemberBtn" class="add-btn">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                            เพิ่มสมาชิกใหม่
+                        </button>
+                    </header>
 
-                <form id="warrantyForm">
-                    <input type="hidden" id="editRecordId">
-                    <!-- User Info -->
-                    <section>
-                        <div class="section-header"><span class="step-number">01</span>
-                            <h2>ข้อมูลสมาชิก</h2>
+                    <div class="table-container">
+                        <table id="membersTable">
+                            <thead>
+                                <tr>
+                                    <th>รหัสสมาชิก</th>
+                                    <th>ชื่อ-นามสกุล</th>
+                                    <th>เบอร์โทรศัพท์</th>
+                                    <th>ที่อยู่ตามบัตร (ID Card Address)</th>
+                                    <th>จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="membersBody"></tbody>
+                        </table>
+                        <div id="membersEmptyState" class="empty-state" style="display: none;">
+                            <p>ยังไม่มีข้อมูลสมาชิกในขณะนี้</p>
                         </div>
-                        <div class="grid-row">
-                            <div class="form-group full-width"><label>รหัสสมาชิก</label><input type="text" id="memberId"
-                                    readonly class="readonly-field"></div>
-                            <div class="form-group"><label>ชื่อ</label><input type="text" id="firstName" required></div>
-                            <div class="form-group"><label>นามสกุล</label><input type="text" id="lastName" required>
-                            </div>
-                            <div class="form-group"><label>เบอร์โทรศัพท์</label><input type="tel" id="phone" required
-                                    placeholder="0xxxxxxxxx"></div>
-                            <div class="form-group"><label>วันเกิด (พ.ศ.)</label>
-                                <div style="display: flex; gap: 0.5rem;">
-                                    <input type="number" id="dobDay" placeholder="วัน" min="1" max="31" required
-                                        style="width: 80px;">
-                                    <input type="number" id="dobMonth" placeholder="เดือน" min="1" max="12" required
-                                        style="width: 80px;">
-                                    <input type="number" id="dobYear" placeholder="ปี พ.ศ." min="2400" max="2600"
-                                        required>
-                                </div>
-                            </div>
-                            <div class="form-group"><label>อายุ</label><input type="text" id="age" readonly
-                                    class="readonly-field" placeholder="คำนวณอัตโนมัติ"></div>
-                            <div class="form-group full-width"><label>ที่อยู่</label><textarea id="address" rows="3"
-                                    required></textarea></div>
-                        </div>
-                    </section>
-
-                    <!-- Device Info -->
-                    <section>
-                        <div class="section-header"><span class="step-number">02</span>
-                            <h2>รายละเอียดอุปกรณ์</h2>
-                        </div>
-                        <div class="grid-row">
-                            <div class="form-group">
-                                <label>ประเภทสินค้า</label>
-                                <select id="productType" required>
-                                    <option value="" disabled selected>เลือกประเภท</option>
-                                    <option value="iPhone">iPhone</option>
-                                    <option value="iPad">iPad</option>
-                                </select>
-                            </div>
-                            <div class="form-group"><label>รุ่น (Model)</label><input type="text" id="model" required>
-                            </div>
-                            <div class="form-group"><label>สี (Color)</label><input type="text" id="color" required>
-                            </div>
-                            <div class="form-group">
-                                <label>ความจุ (Capacity)</label>
-                                <select id="capacity" required>
-                                    <option value="" disabled selected>เลือกความจุ</option>
-                                    <option value="128GB">128GB</option>
-                                    <option value="256GB">256GB</option>
-                                    <option value="512GB">512GB</option>
-                                    <option value="1TB">1TB</option>
-                                    <option value="2TB">2TB</option>
-                                </select>
-                            </div>
-                            <div class="form-group"><label>เลขซีเรียล (Serial Number)</label>
-                                <input type="text" id="serialNumber" required minlength="11" maxlength="11"
-                                    placeholder="ต้องครบ 11 หลัก">
-                            </div>
-                            <div class="form-group" id="imeiGroup"><label>เลข IMEI</label>
-                                <input type="text" id="imei" minlength="15" maxlength="15" pattern="\d{15}"
-                                    placeholder="ตัวเลข 15 หลัก">
-                            </div>
-                            <div class="form-group"><label>วันสิ้นสุดประกันศูนย์</label>
-                                <input type="date" id="officialWarrantyEnd" required>
-                            </div>
-                            <div class="form-group"><label>มูลค่าเครื่อง (Device Value)</label>
-                                <input type="number" id="deviceValue" placeholder="ระบุมูลค่าเครื่อง (บาท)" required>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- Warranty & Payment -->
-                    <section>
-                        <div class="section-header"><span class="step-number">03</span>
-                            <h2>การคุ้มครองและแพ็กเกจ</h2>
-                        </div>
-                        <div class="grid-row">
-                            <div class="form-group">
-                                <label>แพ็กเกจ (Package)</label>
-                                <select id="package" required>
-                                    <option value="" disabled selected>เลือกแผนประกัน</option>
-                                    <option value="Plan A">Plan A</option>
-                                    <option value="Plan B">Plan B</option>
-                                    <option value="Plan C">Plan C</option>
-                                    <option value="Plan D">Plan D</option>
-                                    <option value="Plan a">Plan a</option>
-                                    <option value="Plan b">Plan b</option>
-                                    <option value="Plan c">Plan c</option>
-                                </select>
-                            </div>
-                            <div class="form-group"><label>วันที่เริ่มคุ้มครอง</label>
-                                <input type="text" id="startDateDisplay" readonly class="readonly-field"
-                                    value="วันที่ลงทะเบียน">
-                            </div>
-                            <div class="form-group"><label>วันที่สิ้นสุด</label>
-                                <input type="text" id="endDateDisplay" readonly class="readonly-field"
-                                    value="1 ปีหลังจากเริ่ม">
-                            </div>
-                            <input type="hidden" id="startDate">
-                            <input type="hidden" id="endDate">
-                            <div class="form-group"><label>จำนวนวันคุ้มครอง</label><input type="number"
-                                    id="remainingDays" readonly class="readonly-field"></div>
-                        </div>
-
-                        <div id="pricingSummary" class="pricing-summary">
-                            <div class="price-row"><span>ราคาแพ็กเกจฐาน:</span><span id="packagePriceText">0
-                                    บาท</span></div>
-                            <div class="price-row total"><span>ยอดรวมสุทธิ:</span><span id="totalPriceText">0
-                                    บาท</span></div>
-                        </div>
-
-                        <div class="form-group radio-group">
-                            <label>วิธีการชำระเงิน</label>
-                            <div class="radio-options">
-                                <label class="radio-label"><input type="radio" name="paymentMethod" value="Full Payment"
-                                        checked><span class="radio-custom"></span>ชำระเต็มจำนวน</label>
-                                <label class="radio-label"><input type="radio" name="paymentMethod"
-                                        value="Installment"><span class="radio-custom"></span>ผ่อนชำระ (3 งวด)</label>
-                            </div>
-                        </div>
-
-                        <div id="initialPaymentCheck" class="form-group" style="margin-top: 1rem;">
-                            <label class="radio-label"
-                                style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                                <input type="checkbox" id="initialPaidCheck" style="width: 20px; height: 20px;">
-                                <span style="font-weight: 500; font-size: 0.95rem;">ทำเครื่องหมายเป็นชำระแล้ว
-                                    (งวดแรกหรือทั้งหมด)</span>
-                            </label>
-                        </div>
-
-                        <div id="installmentContainer" class="installment-preview" style="display: none;">
-                            <h3>รายละเอียดการผ่อนชำระ</h3>
-                            <table class="preview-table">
-                                <thead>
-                                    <tr>
-                                        <th>งวดที่</th>
-                                        <th>จำนวนเงิน (บาท)</th>
-                                        <th>วันครบกำหนด</th>
-                                        <th>สิ้นสุดระยะผ่อนผัน</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="installmentBody"></tbody>
-                            </table>
-                        </div>
-                    </section>
-
-                    <!-- Payment Management (Only shown in Edit Mode) -->
-                    <section id="paymentManagementSection" class="payment-status-section" style="display: none;">
-                        <div class="section-header"><span class="step-number">04</span>
-                            <h2>จัดการการชำระเงิน</h2>
-                        </div>
-                        <div id="fullPaymentStatus" style="display: none;">
-                            <div class="payment-info-card">
-                                <div>
-                                    <p style="color: var(--text-muted); font-size: 0.9rem;">ยอดรวมทั้งหมด</p>
-                                    <h3 id="fullPaymentAmount" style="margin: 0;">0 บาท</h3>
-                                </div>
-                                <div style="text-align: right;">
-                                    <p id="fullPaymentStatusText" style="margin-bottom: 0.5rem;"></p>
-                                    <button type="button" id="confirmFullPaymentBtn"
-                                        class="receive-btn">ยืนยันการรับชำระ</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div id="installmentStatus" style="display: none;">
-                            <table class="preview-table">
-                                <thead>
-                                    <tr>
-                                        <th>งวดที่</th>
-                                        <th>ยอดเงิน (บาท)</th>
-                                        <th>วันครบกำหนด</th>
-                                        <th>สถานะ</th>
-                                        <th>จัดการ</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="paymentStatusBody"></tbody>
-                            </table>
-                        </div>
-                    </section>
-
-                    <div class="form-actions">
-                        <button type="button" id="backToDashBtn" class="submit-btn"
-                            style="background: var(--text-muted); margin-right: 1rem;">ย้อนกลับ</button>
-                        <button type="submit" class="submit-btn"><span>บันทึกข้อมูลการลงทะเบียน</span></button>
                     </div>
-                </form>
+                </main>
+
+                <!-- Shops Main Content -->
+                <main id="shopsMain" class="main-content" style="display: none;">
+                    <header class="dashboard-header">
+                        <div class="header-titles">
+                            <h1>ข้อมูลร้านค้าพันธมิตร</h1>
+                            <p>จัดการรายชื่อร้านค้าที่ร่วมรายการและสถานที่ตั้ง</p>
+                        </div>
+                        <button id="addShopBtn" class="add-btn">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                            เพิ่มร้านค้าใหม่
+                        </button>
+                    </header>
+
+                    <div class="table-container">
+                        <table id="shopsTable">
+                            <thead>
+                                <tr>
+                                    <th>รหัสร้านค้า</th>
+                                    <th>ชื่อร้านค้า</th>
+                                    <th>สถานที่ตั้ง (Location)</th>
+                                    <th>จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="shopsBody"></tbody>
+                        </table>
+                        <div id="shopsEmptyState" class="empty-state" style="display: none;">
+                            <p>ยังไม่มีข้อมูลร้านค้าในขณะนี้</p>
+                        </div>
+                    </div>
+                </main>
             </div>
         </div>
+    </div>
+    </div>
+
+    <!-- Registration View -->
+    <div id="registrationView" class="view" style="display: none; padding: 2rem 1rem;">
+        <div class="container">
+            <header class="form-header">
+                <img src="logo_smilecare.png" alt="SmileCare Logo" class="logo">
+                <h1 id="regFormTitle">ลงทะเบียนประกันภัย</h1>
+                <p id="regFormSubtitle">ประกันคุ้มครองมือถือ iPhone & iPad</p>
+            </header>
+
+            <form id="warrantyForm">
+                <input type="hidden" id="editRecordId">
+                <!-- User Info -->
+                <section>
+                    <div class="section-header"><span class="step-number">01</span>
+                        <h2>ข้อมูลสมาชิก</h2>
+                    </div>
+                    <div class="grid-row">
+                        <div class="form-group"><label>เลขกรมธรรม์ (กธ.)</label><input type="text" id="policyNumber"
+                                readonly class="readonly-field" placeholder="ออกโดยระบบอัตโนมัติ"></div>
+                        <div class="form-group"><label>รหัสสมาชิก</label><input type="text" id="memberId"
+                                placeholder="กรอกรหัสสมาชิกเพื่อค้นหา (เช่น SMC123456)"></div>
+                        <div class="form-group">
+                            <label>ร้านค้า (Shop)</label>
+                            <select id="shopName" required>
+                                <option value="" disabled selected>โหลดข้อมูลร้านค้า...</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label>ชื่อ</label><input type="text" id="firstName" required></div>
+                        <div class="form-group"><label>นามสกุล</label><input type="text" id="lastName" required>
+                        </div>
+                        <div class="form-group"><label>เบอร์โทรศัพท์</label><input type="tel" id="phone" required
+                                placeholder="0xxxxxxxxx"></div>
+                        <div class="form-group"><label>วันเกิด (พ.ศ.)</label>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <input type="number" id="dobDay" placeholder="วัน" min="1" max="31" required
+                                    style="width: 80px;">
+                                <input type="number" id="dobMonth" placeholder="เดือน" min="1" max="12" required
+                                    style="width: 80px;">
+                                <input type="number" id="dobYear" placeholder="ปี พ.ศ." min="2400" max="2600" required>
+                            </div>
+                        </div>
+                        <div class="form-group"><label>อายุ</label><input type="text" id="age" readonly
+                                class="readonly-field" placeholder="คำนวณอัตโนมัติ"></div>
+                        <div class="form-group full-width"><label>ที่อยู่</label><textarea id="address" rows="3"
+                                required></textarea></div>
+                    </div>
+                </section>
+
+                <!-- Device Info -->
+                <section>
+                    <div class="section-header"><span class="step-number">02</span>
+                        <h2>รายละเอียดอุปกรณ์</h2>
+                    </div>
+                    <div class="grid-row">
+                        <div class="form-group">
+                            <label>ประเภทสินค้า</label>
+                            <select id="productType" required>
+                                <option value="" disabled selected>เลือกประเภท</option>
+                                <option value="iPhone">iPhone</option>
+                                <option value="iPad">iPad</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>รุ่น (Model)</label>
+                            <select id="model" required>
+                                <option value="" disabled selected>เลือก</option>
+                                <option value="iPhone 13">iPhone 13</option>
+                                <option value="iPhone 15">iPhone 15</option>
+                                <option value="iPhone 16">iPhone 16</option>
+                                <option value="iPhone 16 Plus">iPhone 16 Plus</option>
+                                <option value="iPhone 16 Pro">iPhone 16 Pro</option>
+                                <option value="iPhone 16 Pro Max">iPhone 16 Pro Max</option>
+                                <option value="iPhone 17 256">iPhone 17 256</option>
+                                <option value="iPhone 17 Pro">iPhone 17 Pro</option>
+                                <option value="iPhone 17 Pro Max">iPhone 17 Pro Max</option>
+                                <option value="iPad Gen11">iPad Gen11</option>
+                                <option value="iPad Air7">iPad Air7</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>สี (Color)</label>
+                            <select id="color" required>
+                                <option value="" disabled selected>เลือกสี</option>
+                                <option value="สีดำ">สีดำ (Black)</option>
+                                <option value="สีขาว">สีขาว (White)</option>
+                                <option value="บลู">บลู (Blue)</option>
+                                <option value="ชมพู">ชมพู (Pink)</option>
+                                <option value="เขียว">เขียว (Green)</option>
+                                <option value="ม่วง">ม่วง (Purple)</option>
+                                <option value="ส้ม">ส้ม (Orange)</option>
+                                <option value="เทา">เทา (Gray)</option>
+                                <option value="กราไฟต์">กราไฟต์ (Graphite)</option>
+                                <option value="ทะเลทราย">ทะเลทราย (Desert)</option>
+                                <option value="ไทเทเนียมทะเลทราย">ไทเทเนียมทะเลทราย (Desert Titanium)</option>
+                                <option value="ไวท์ไทเทเนียม">ไวท์ไทเทเนียม (White Titanium)</option>
+
+
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>ความจุ (Capacity)</label>
+                            <select id="capacity" required>
+                                <option value="" disabled selected>เลือกความจุ</option>
+                                <option value="128GB">128GB</option>
+                                <option value="256GB">256GB</option>
+                                <option value="512GB">512GB</option>
+                                <option value="1TB">1TB</option>
+                                <option value="2TB">2TB</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label>เลขซีเรียล (Serial Number)</label>
+                            <input type="text" id="serialNumber" required minlength="10" maxlength="10"
+                                placeholder="ต้องครบ 10 หลัก">
+                        </div>
+                        <div class="form-group" id="imeiGroup"><label>เลข IMEI</label>
+                            <input type="text" id="imei" minlength="15" maxlength="15" pattern="\d{15}"
+                                placeholder="ตัวเลข 15 หลัก">
+                        </div>
+                        <div class="form-group"><label>วันสิ้นสุดประกันศูนย์</label>
+                            <input type="date" id="officialWarrantyEnd" required>
+                        </div>
+                        <div class="form-group"><label>มูลค่าเครื่อง (Device Value)</label>
+                            <input type="number" id="deviceValue" placeholder="ระบุมูลค่าเครื่อง (บาท)" required>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Warranty & Payment -->
+                <section>
+                    <div class="section-header"><span class="step-number">03</span>
+                        <h2>การคุ้มครองและแพ็กเกจ</h2>
+                    </div>
+                    <div class="grid-row">
+                        <div class="form-group">
+                            <label>แพ็กเกจ (Package)</label>
+                            <select id="package" required>
+                                <option value="" disabled selected>เลือกแผนประกัน</option>
+                                <option value="Plan A">Plan A</option>
+                                <option value="Plan B">Plan B</option>
+                                <option value="Plan C">Plan C</option>
+                                <option value="Plan D">Plan D</option>
+                                <option value="Plan a">Plan a</option>
+                                <option value="Plan b">Plan b</option>
+                                <option value="Plan c">Plan c</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label>วันที่เริ่มคุ้มครอง</label>
+                            <input type="text" id="startDateDisplay" readonly class="readonly-field"
+                                value="วันที่ลงทะเบียน">
+                        </div>
+                        <div class="form-group"><label>วันที่สิ้นสุด</label>
+                            <input type="text" id="endDateDisplay" readonly class="readonly-field"
+                                value="1 ปีหลังจากเริ่ม">
+                        </div>
+                        <input type="hidden" id="startDate">
+                        <input type="hidden" id="endDate">
+                        <div class="form-group"><label>จำนวนวันคุ้มครอง</label><input type="number" id="remainingDays"
+                                readonly class="readonly-field"></div>
+                    </div>
+
+                    <div id="pricingSummary" class="pricing-summary">
+                        <div class="price-row"><span>ราคาแพ็กเกจฐาน:</span><span id="packagePriceText">0
+                                บาท</span></div>
+                        <div class="price-row total"><span>ยอดรวมสุทธิ:</span><span id="totalPriceText">0
+                                บาท</span></div>
+                    </div>
+
+                    <div class="form-group radio-group">
+                        <label>วิธีการชำระเงิน</label>
+                        <div class="radio-options">
+                            <label class="radio-label"><input type="radio" name="paymentMethod" value="Full Payment"
+                                    checked><span class="radio-custom"></span>ชำระเต็มจำนวน</label>
+                            <label class="radio-label"><input type="radio" name="paymentMethod"
+                                    value="Installment"><span class="radio-custom"></span>ผ่อนชำระ (3 งวด)</label>
+                        </div>
+                    </div>
+
+                    <div id="initialPaymentCheck" class="form-group" style="margin-top: 1rem;">
+                        <label class="radio-label"
+                            style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                            <input type="checkbox" id="initialPaidCheck" style="width: 20px; height: 20px;">
+                            <span style="font-weight: 500; font-size: 0.95rem;">ทำเครื่องหมายเป็นชำระแล้ว
+                                (งวดแรกหรือทั้งหมด)</span>
+                        </label>
+                    </div>
+
+                    <div id="installmentContainer" class="installment-preview" style="display: none;">
+                        <h3>รายละเอียดการผ่อนชำระ</h3>
+                        <table class="preview-table">
+                            <thead>
+                                <tr>
+                                    <th>งวดที่</th>
+                                    <th>จำนวนเงิน (บาท)</th>
+                                    <th>วันครบกำหนด</th>
+                                    <th>สิ้นสุดระยะผ่อนผัน</th>
+                                </tr>
+                            </thead>
+                            <tbody id="installmentBody"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Payment Management (Only shown in Edit Mode) -->
+                <section id="paymentManagementSection" class="payment-status-section" style="display: none;">
+                    <div class="section-header"><span class="step-number">04</span>
+                        <h2>จัดการการชำระเงิน</h2>
+                    </div>
+                    <div id="fullPaymentStatus" style="display: none;">
+                        <div class="payment-info-card">
+                            <div>
+                                <p style="color: var(--text-muted); font-size: 0.9rem;">ยอดรวมทั้งหมด</p>
+                                <h3 id="fullPaymentAmount" style="margin: 0;">0 บาท</h3>
+                            </div>
+                            <div style="text-align: right;">
+                                <p id="fullPaymentStatusText" style="margin-bottom: 0.5rem;"></p>
+                                <button type="button" id="confirmFullPaymentBtn"
+                                    class="receive-btn">ยืนยันการรับชำระ</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="installmentStatus" style="display: none;">
+                        <table class="preview-table">
+                            <thead>
+                                <tr>
+                                    <th>งวดที่</th>
+                                    <th>ยอดเงิน (บาท)</th>
+                                    <th>วันครบกำหนด</th>
+                                    <th>สถานะ</th>
+                                    <th>จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="paymentStatusBody"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <div class="form-actions">
+                    <button type="button" id="backToDashBtn" class="submit-btn"
+                        style="background: var(--text-muted); margin-right: 1rem;">ย้อนกลับ</button>
+                    <button type="submit" class="submit-btn"><span>บันทึกข้อมูลการลงทะเบียน</span></button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     </div>
 
@@ -601,6 +735,67 @@
             <h2>บันทึกข้อมูลสำเร็จ!</h2>
             <p>ข้อมูลประกันภัยของคุณถูกบันทึกลงในระบบเรียบร้อยแล้ว</p>
             <button id="closeModal">กลับสู่หน้าหลัก</button>
+        </div>
+    </div>
+
+    <!-- Member Form Modal -->
+    <div id="memberModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <h2 id="memberModalTitle">เพิ่มข้อมูลสมาชิก</h2>
+            <form id="memberForm">
+                <input type="hidden" id="editMemberId">
+                <div class="grid-row">
+                    <div class="form-group full-width"><label>รหัสสมาชิก</label><input type="text" id="memberIdDisplay"
+                            readonly class="readonly-field" placeholder="ออกโดยระบบอัตโนมัติ"></div>
+                    <div class="form-group"><label>ชื่อ</label><input type="text" id="memberFirstName" required></div>
+                    <div class="form-group"><label>นามสกุล</label><input type="text" id="memberLastName" required></div>
+                    <div class="form-group"><label>เบอร์โทรศัพท์</label><input type="tel" id="memberPhone" required>
+                    </div>
+                    <div class="form-group"><label>วันเกิด</label><input type="date" id="memberBirthdate"></div>
+                    <div class="form-group full-width">
+                        <label>ที่อยู่ตามหน้าบัตร (ID Card Address)</label>
+                        <textarea id="memberIdCardAddress" rows="3"></textarea>
+                    </div>
+                    <div class="form-group full-width">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                            <label>ที่อยู่จัดส่ง (Shipping Address)</label>
+                            <button type="button" id="copyAddressBtn" class="receive-btn"
+                                style="padding: 4px 10px; font-size: 0.75rem;">ใช้ที่อยู่ตามสำเนาบัตร</button>
+                        </div>
+                        <textarea id="memberShippingAddress" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="form-actions" style="margin-top: 1.5rem;">
+                    <button type="button" id="closeMemberModal" class="submit-btn"
+                        style="background: var(--text-muted);">ยกเลิก</button>
+                    <button type="submit" class="submit-btn">บันทึกข้อมูล</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="shopModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <h2 id="shopModalTitle">เพิ่มข้อมูลร้านค้า</h2>
+            <form id="shopForm">
+                <input type="hidden" id="editShopId">
+                <div class="grid-row">
+                    <div class="form-group full-width"><label>รหัสร้านค้า</label><input type="text" id="shopIdDisplay"
+                            readonly class="readonly-field" placeholder="ออกโดยระบบอัตโนมัติ"></div>
+                    <div class="form-group full-width"><label>ชื่อร้านค้า</label><input type="text" id="shopName"
+                            required></div>
+                    <div class="form-group full-width">
+                        <label>สถานที่ตั้ง (Location)</label>
+                        <textarea id="shopLocation" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="form-actions" style="margin-top: 1.5rem;">
+                    <button type="button" id="closeShopModal" class="submit-btn"
+                        style="background: var(--text-muted);">ยกเลิก</button>
+                    <button type="submit" class="submit-btn">บันทึกข้อมูล</button>
+                </div>
+            </form>
         </div>
     </div>
 
