@@ -326,7 +326,7 @@
                                 <line x1="12" y1="5" x2="12" y2="19"></line>
                                 <line x1="5" y1="12" x2="19" y2="12"></line>
                             </svg>
-                            เพิ่มรายการใหม่
+                            สร้างสัญญาใหม่
                         </button>
                     </header>
 
@@ -497,11 +497,30 @@
                     <div class="section-header"><span class="step-number">01</span>
                         <h2>ข้อมูลสมาชิก</h2>
                     </div>
+
+                    <!-- Member Search Box -->
+                    <div class="form-group full-width" style="margin-bottom: 2rem;">
+                        <label>ค้นหาสมาชิก (เลขที่สมาชิก / เบอร์โทร / ชื่อ-นามสกุล)</label>
+                        <div class="search-container">
+                            <input type="text" id="memberSearchInput" placeholder="พิมพ์เพื่อค้นหาคมหาก..."
+                                autocomplete="off" style="border: 2px solid var(--primary); padding-left: 3rem;">
+                            <span
+                                style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--primary);">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                </svg>
+                            </span>
+                            <div id="memberSearchResults" class="search-results-dropdown"></div>
+                        </div>
+                    </div>
+
                     <div class="grid-row">
                         <div class="form-group"><label>เลขกรมธรรม์ (กธ.)</label><input type="text" id="policyNumber"
                                 readonly class="readonly-field" placeholder="ออกโดยระบบอัตโนมัติ"></div>
                         <div class="form-group"><label>รหัสสมาชิก</label><input type="text" id="memberId"
-                                placeholder="กรอกรหัสสมาชิกเพื่อค้นหา (เช่น SMC123456)"></div>
+                                placeholder="รหัสสมาชิก"></div>
                         <div class="form-group">
                             <label>ร้านค้า (Shop)</label>
                             <select id="shopName" required>
@@ -594,10 +613,12 @@
                         <div class="form-group"><label>เลขซีเรียล (Serial Number)</label>
                             <input type="text" id="serialNumber" required minlength="10" maxlength="10"
                                 placeholder="ต้องครบ 10 หลัก">
+                            <div class="validation-message" id="serialError">หมายเลขนี้มีอยู่ในระบบแล้ว</div>
                         </div>
                         <div class="form-group" id="imeiGroup"><label>เลข IMEI</label>
                             <input type="text" id="imei" minlength="15" maxlength="15" pattern="\d{15}"
                                 placeholder="ตัวเลข 15 หลัก">
+                            <div class="validation-message" id="imeiError">หมายเลขนี้มีอยู่ในระบบแล้ว</div>
                         </div>
                         <div class="form-group"><label>วันสิ้นสุดประกันศูนย์</label>
                             <input type="date" id="officialWarrantyEnd" required>
@@ -710,6 +731,7 @@
                                     <th>วันครบกำหนด</th>
                                     <th>สถานะ</th>
                                     <th>จัดการ</th>
+                                    <th>พิมพ์</th>
                                 </tr>
                             </thead>
                             <tbody id="paymentStatusBody"></tbody>
@@ -734,7 +756,10 @@
             <div class="success-icon">✓</div>
             <h2>บันทึกข้อมูลสำเร็จ!</h2>
             <p>ข้อมูลประกันภัยของคุณถูกบันทึกลงในระบบเรียบร้อยแล้ว</p>
-            <button id="closeModal">กลับสู่หน้าหลัก</button>
+            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 1rem;">
+                <button id="closeModal" style="margin: 0;">กลับสู่หน้าหลัก</button>
+                <button id="printReceiptBtn" class="receive-btn" style="display: none;">พิมพ์ใบเสร็จ</button>
+            </div>
         </div>
     </div>
 

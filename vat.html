@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receipt/Tax Invoice - SmileCare</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --width: 80mm;
+            --font-body: 'Sarabun', sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-body);
+            font-size: 11px;
+            color: #000;
+            background-color: #f0f0f0;
+        }
+
+        /* UI Controls (Non-printable) */
+        .controls {
+            background: #fff;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .controls label {
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-print {
+            padding: 8px 16px;
+            background: #0d9488;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        /* Printable Area */
+        .print-container {
+            width: var(--width);
+            background: #fff;
+            margin: 0 auto;
+            padding: 5mm;
+            box-sizing: border-box;
+            min-height: 100vh;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .header h1 {
+            font-size: 16px;
+            margin: 5px 0;
+        }
+
+        .header p {
+            margin: 2px 0;
+            font-size: 10px;
+        }
+
+        .doc-title {
+            text-align: center;
+            font-size: 14px;
+            font-weight: 700;
+            border-top: 1px dashed #000;
+            border-bottom: 1px dashed #000;
+            padding: 5px 0;
+            margin: 10px 0;
+            text-transform: uppercase;
+        }
+
+        .info-block {
+            margin-bottom: 10px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2px;
+        }
+
+        .info-label {
+            font-weight: 600;
+        }
+
+        .divider {
+            border-top: 1px solid #000;
+            margin: 5px 0;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+
+        .table th {
+            text-align: left;
+            border-bottom: 1px solid #000;
+            padding: 3px 0;
+        }
+
+        .table td {
+            padding: 5px 0;
+            vertical-align: top;
+        }
+
+        .totals {
+            margin-top: 5px;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2px;
+        }
+
+        .total-row.grand-total {
+            font-weight: 700;
+            font-size: 12px;
+            border-top: 1px solid #000;
+            padding-top: 3px;
+        }
+
+        .signatures {
+            margin-top: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .sig-box {
+            text-align: center;
+        }
+
+        .sig-line {
+            border-bottom: 1px solid #000;
+            width: 80%;
+            margin: 0 auto 5px;
+            height: 15px;
+        }
+
+        @media print {
+            body {
+                background: none;
+            }
+
+            .controls {
+                display: none !important;
+            }
+
+            .print-container {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                box-shadow: none;
+            }
+
+            @page {
+                margin: 0;
+                size: 80mm auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="controls">
+        <label>
+            <input type="radio" name="docType" value="receipt" checked onchange="updateDocType()">
+            ใบเสร็จรับเงิน (Receipt)
+        </label>
+        <label>
+            <input type="radio" name="docType" value="tax_invoice" onchange="updateDocType()">
+            ใบกำกับภาษี (Tax Invoice)
+        </label>
+        <button class="btn-print" onclick="window.print()">พิมพ์ (Print)</button>
+    </div>
+
+    <div class="print-container">
+        <div class="header">
+            <h1 id="companyName">SMILE CARE</h1>
+            <p>บริษัท สไมล์แคร์ จำกัด</p>
+            <p>เลขที่ 62 ถนนพิพิธภักดี ตำบลสะเตง</p>
+            <p>อำเภอเมือง จังหวัดยะลา 95000</p>
+            <p>เลขประจำตัวผู้เสียภาษี: 0000000000000</p>
+        </div>
+
+        <div class="doc-title" id="displayDocTitle">ใบเสร็จรับเงิน / RECEIPT</div>
+
+        <div class="info-block">
+            <div class="info-row">
+                <span class="info-label">วันที่ (Date):</span>
+                <span id="displayDate">-</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">เลขที่ (No):</span>
+                <span id="displayReceiptNo">-</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">เลขกรมธรรม์ (Policy No):</span>
+                <span id="displayPolicyNo">-</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">ประเภทความคุ้มครอง:</span>
+                <span>อุบัติเหตุสำหรับโทรศัพท์มือถือ</span>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="info-block">
+            <div class="info-row">
+                <span class="info-label">ร้านค้า (Shop/Agent):</span>
+                <span id="displayShopName">-</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">ลูกค้า (Customer):</span>
+                <span id="displayCustomerName">-</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">เบอร์โทร (Phone):</span>
+                <span id="displayCustomerPhone">-</span>
+            </div>
+            <div class="info-row" style="align-items: flex-start;">
+                <span class="info-label">ที่อยู่ (Address):</span>
+                <span id="displayCustomerAddress" style="max-width: 60%; text-align: right;">-</span>
+            </div>
+        </div>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>รายการ (Description)</th>
+                    <th style="text-align: right;">จำนวนเงิน</th>
+                </tr>
+            </thead>
+            <tbody id="itemsBody">
+                <!-- Row added via JS -->
+            </tbody>
+        </table>
+
+        <div class="totals">
+            <div id="vatSection" style="display: none;">
+                <div class="total-row">
+                    <span>ยอดก่อนภาษี (Pre-VAT):</span>
+                    <span id="displayPreVat">0.00</span>
+                </div>
+                <div class="total-row">
+                    <span>ภาษีมูลค่าเพิ่ม 7% (VAT):</span>
+                    <span id="displayVatAmt">0.00</span>
+                </div>
+            </div>
+            <div class="total-row grand-total">
+                <span>ยอดชำระสุทธิ (Total Amount):</span>
+                <span id="displayTotal">0.00</span>
+            </div>
+        </div>
+
+        <div class="signatures">
+            <div class="sig-box">
+                <div class="sig-line"></div>
+                <span>ผู้รับเงิน (Receiver)</span>
+                <div id="displayReceiverName" style="font-weight: 600; margin-top: 5px;">-</div>
+            </div>
+            <div class="sig-box">
+                <div class="sig-line"></div>
+                <span>ผู้ชำระเงิน (Payer)</span>
+                <div id="displayPayerName" style="font-weight: 600; margin-top: 5px;">-</div>
+            </div>
+        </div>
+
+        <p style="text-align: center; margin-top: 20px; font-size: 9px; color: #666;">
+            ขอบคุณที่ใช้บริการ SmileCare<br>
+            Thank you for choosing SmileCare
+        </p>
+    </div>
+
+    <script>
+        let receiptData = null;
+
+        window.onload = function () {
+            const dataStr = localStorage.getItem('smilecare_receipt_data');
+            if (!dataStr) {
+                alert('No receipt data found!');
+                return;
+            }
+
+            receiptData = JSON.parse(dataStr);
+            console.log('Loaded Receipt Data:', receiptData);
+            populateData();
+        };
+
+        function populateData() {
+            document.getElementById('displayDate').textContent = receiptData.paidDate || new Date().toLocaleString('th-TH');
+            document.getElementById('displayReceiptNo').textContent = receiptData.receiptNo || 'RC' + Date.now();
+            document.getElementById('displayPolicyNo').textContent = receiptData.policyNumber || '-';
+            document.getElementById('displayShopName').textContent = receiptData.shopName || '-';
+            document.getElementById('displayCustomerName').textContent = receiptData.customerName || '-';
+            document.getElementById('displayCustomerPhone').textContent = receiptData.customerPhone || '-';
+            document.getElementById('displayCustomerAddress').textContent = receiptData.customerAddress || '-';
+
+            // Signature names
+            document.getElementById('displayReceiverName').textContent = receiptData.staffName || '-';
+            document.getElementById('displayPayerName').textContent = receiptData.customerName || '-';
+
+            const itemsBody = document.getElementById('itemsBody');
+            itemsBody.innerHTML = `
+                <tr>
+                    <td>${receiptData.description || 'ชำระค่าเบี้ยประกัน'}</td>
+                    <td style="text-align: right;">${receiptData.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                </tr>
+            `;
+
+            updateDocType();
+        }
+
+        function updateDocType() {
+            const docType = document.querySelector('input[name="docType"]:checked').value;
+            const vatSection = document.getElementById('vatSection');
+            const displayDocTitle = document.getElementById('displayDocTitle');
+
+            const total = receiptData.amount;
+
+            if (docType === 'tax_invoice') {
+                displayDocTitle.textContent = 'ใบกำกับภาษี / TAX INVOICE';
+                vatSection.style.display = 'block';
+
+                const preVat = total / 1.07;
+                const vatAmt = total - preVat;
+
+                document.getElementById('displayPreVat').textContent = preVat.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                document.getElementById('displayVatAmt').textContent = vatAmt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            } else {
+                displayDocTitle.textContent = 'ใบเสร็จรับเงิน / RECEIPT';
+                vatSection.style.display = 'none';
+            }
+
+            document.getElementById('displayTotal').textContent = total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+    </script>
+</body>
+
+</html>

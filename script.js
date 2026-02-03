@@ -277,12 +277,17 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.addEventListener('click', () => editWarranty(btn.dataset.id));
         });
 
-        // Add listeners to print buttons
+        // Add listeners to print buttons (Contract Document)
         document.querySelectorAll('.print-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 window.open(`document.html?id=${btn.dataset.id}`, '_blank');
             });
         });
+    }
+
+    function openReceipt(data) {
+        localStorage.setItem('smilecare_receipt_data', JSON.stringify(data));
+        window.open('vat.html', '_blank');
     }
 
     document.getElementById('addNewBtn').addEventListener('click', () => {
@@ -511,6 +516,28 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.payment.status === 'Paid') {
                 statusText.innerHTML = `<span class="status-paid">ชำระแล้วเมื่อ ${new Date(data.payment.paidDate).toLocaleDateString('th-TH')}</span>`;
                 confirmBtn.style.display = 'none';
+
+                // Add Print button for full payment
+                const printBtn = document.createElement('button');
+                printBtn.type = 'button';
+                printBtn.className = 'receive-btn';
+                printBtn.style.background = 'var(--secondary)';
+                printBtn.style.marginTop = '0.5rem';
+                printBtn.textContent = 'พิมพ์ใบเสร็จ';
+                printBtn.onclick = () => openReceipt({
+                    policyNumber: data.policyNumber,
+                    receiptNo: 'RC-' + data.policyNumber + '-F',
+                    paidDate: new Date(data.payment.paidDate).toLocaleString('th-TH'),
+                    shopName: data.shopName,
+                    staffName: currentUser ? currentUser.staffName : (data.staffName || '-'),
+                    customerName: `${data.customer.firstName} ${data.customer.lastName}`,
+                    customerPhone: data.customer.phone,
+                    customerAddress: data.customer.address,
+                    amount: data.package.price,
+                    description: `ชำระเต็มจำนวน แพ็กเกจ ${data.package.plan}`
+                });
+                statusText.appendChild(document.createElement('br'));
+                statusText.appendChild(printBtn);
             } else {
                 statusText.innerHTML = `<span class="status-pending">ค้างชำระ</span>`;
                 confirmBtn.style.display = 'block';
@@ -538,14 +565,35 @@ document.addEventListener('DOMContentLoaded', () => {
                         <td>
                             ${isPaid ? '-' : `<button type="button" class="receive-btn" data-id="${data._id}" data-no="${s.installmentNo}" data-amt="${s.amount}">รับชำระเงิน</button>`}
                         </td>
+                        <td>
+                            ${isPaid ? `<button type="button" class="print-receipt-btn receive-btn" style="background: var(--secondary); padding: 4px 8px;" data-no="${s.installmentNo}" data-amt="${s.amount}" data-date="${s.paidDate}">พิมพ์</button>` : '-'}
+                        </td>
                     </tr>
                 `;
             }).join('');
 
             // Add listeners to individual installment buttons
-            body.querySelectorAll('.receive-btn').forEach(btn => {
+            body.querySelectorAll('.receive-btn:not(.print-receipt-btn)').forEach(btn => {
                 btn.addEventListener('click', () => {
                     receivePayment(btn.dataset.id, parseInt(btn.dataset.no), parseInt(btn.dataset.amt));
+                });
+            });
+
+            // Add listeners to individual print buttons
+            body.querySelectorAll('.print-receipt-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    openReceipt({
+                        policyNumber: data.policyNumber,
+                        receiptNo: 'RC-' + data.policyNumber + '-' + btn.dataset.no,
+                        paidDate: new Date(btn.dataset.date).toLocaleString('th-TH'),
+                        shopName: data.shopName,
+                        staffName: currentUser ? currentUser.staffName : (data.staffName || '-'),
+                        customerName: `${data.customer.firstName} ${data.customer.lastName}`,
+                        customerPhone: data.customer.phone,
+                        customerAddress: data.customer.address,
+                        amount: parseInt(btn.dataset.amt),
+                        description: `ชำระค่าเบี้ยประกัน งวดที่ ${btn.dataset.no}`
+                    });
                 });
             });
         }
@@ -568,6 +616,32 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentEditData = updatedData; // CRITICAL: Update app state
                 renderPaymentManagement(updatedData);
                 fetchWarranties(); // Refresh dashboard list background
+
+                // Show Success Modal with Print Option
+                const modalTitle = document.querySelector('#successModal h2');
+                const modalText = document.querySelector('#successModal p');
+                const printBtn = document.getElementById('printReceiptBtn');
+
+                modalTitle.textContent = 'รับชำระเงินสำเร็จ!';
+                modalText.textContent = `บันทึกการชำระเงินจำนวน ${amount.toLocaleString()} บาท เรียบร้อยแล้ว`;
+
+                printBtn.style.display = 'block';
+                printBtn.onclick = () => {
+                    openReceipt({
+                        policyNumber: updatedData.policyNumber,
+                        receiptNo: 'RC-' + updatedData.policyNumber + '-' + (installmentNo || 'F'),
+                        paidDate: new Date().toLocaleString('th-TH'),
+                        shopName: updatedData.shopName,
+                        staffName: currentUser ? currentUser.staffName : (updatedData.staffName || '-'),
+                        customerName: `${updatedData.customer.firstName} ${updatedData.customer.lastName}`,
+                        customerPhone: updatedData.customer.phone,
+                        customerAddress: updatedData.customer.address,
+                        amount: amount,
+                        description: installmentNo ? `ชำระค่าเบี้ยประกัน งวดที่ ${installmentNo}` : `ชำระเต็มจำนวน แพ็กเกจ ${updatedData.package.plan}`
+                    });
+                };
+
+                document.getElementById('successModal').style.display = 'flex';
             } else {
                 alert(data.message || 'เกิดข้อผิดพลาดในการอัปเดตการชำระเงิน');
             }
@@ -584,43 +658,118 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('package').addEventListener('change', updatePaymentUI);
     document.getElementsByName('paymentMethod').forEach(r => r.addEventListener('change', updatePaymentUI));
 
-    async function handleMemberLookup(query) {
-        if (!query || query.length < 5) return;
+    async function searchMembers(query) {
+        const resultsBox = document.getElementById('memberSearchResults');
+        if (!query || query.length < 2) {
+            resultsBox.style.display = 'none';
+            return;
+        }
 
         try {
-            const res = await fetch(`/api/members/lookup?query=${query}`);
+            const res = await fetch(`/api/members/lookup?query=${encodeURIComponent(query)}`);
             const data = await res.json();
-            if (data.success) {
-                const member = data.member;
-                document.getElementById('memberId').value = member.memberId;
-                document.getElementById('firstName').value = member.firstName;
-                document.getElementById('lastName').value = member.lastName;
-                document.getElementById('phone').value = member.phone;
-                document.getElementById('address').value = member.shippingAddress || member.idCardAddress || '';
-                if (member.birthdate) {
-                    const dob = new Date(member.birthdate);
-                    document.getElementById('dobDay').value = dob.getDate();
-                    document.getElementById('dobMonth').value = dob.getMonth() + 1;
-                    document.getElementById('dobYear').value = dob.getFullYear() + 543;
-                    updateAge();
-                }
-                // Optional: visual feedback
-                document.getElementById('memberId').style.borderColor = 'var(--success)';
+
+            if (data.success && data.members && data.members.length > 0) {
+                resultsBox.innerHTML = data.members.map(m => `
+                    <div class="search-result-item" onclick="selectMember(${JSON.stringify(m).replace(/"/g, '&quot;')})">
+                        <div class="search-result-info">
+                            <span class="search-result-name">${m.firstName} ${m.lastName}</span>
+                            <span class="search-result-sub">${m.phone}</span>
+                        </div>
+                        <span class="search-result-tag">${m.memberId}</span>
+                    </div>
+                `).join('');
+                resultsBox.style.display = 'block';
+            } else {
+                resultsBox.innerHTML = '<div class="search-result-item" style="cursor: default; color: #94a3b8;">ไม่พบข้อมูลสมาชิก</div>';
+                resultsBox.style.display = 'block';
             }
         } catch (err) {
-            console.error('Member lookup error:', err);
+            console.error('Member search error:', err);
         }
     }
 
-    // Member auto-lookup logic in Registration Form
-    const phoneInput = document.getElementById('phone');
-    if (phoneInput) {
-        phoneInput.addEventListener('blur', () => handleMemberLookup(phoneInput.value.trim()));
+    window.selectMember = function (member) {
+        document.getElementById('memberId').value = member.memberId;
+        document.getElementById('firstName').value = member.firstName;
+        document.getElementById('lastName').value = member.lastName;
+        document.getElementById('phone').value = member.phone;
+        document.getElementById('address').value = member.shippingAddress || member.idCardAddress || '';
+
+        if (member.birthdate) {
+            const dob = new Date(member.birthdate);
+            document.getElementById('dobDay').value = dob.getDate();
+            document.getElementById('dobMonth').value = dob.getMonth() + 1;
+            document.getElementById('dobYear').value = dob.getFullYear() + 543;
+            updateAge();
+        }
+
+        document.getElementById('memberSearchResults').style.display = 'none';
+        document.getElementById('memberSearchInput').value = `${member.firstName} ${member.lastName} (${member.memberId})`;
+    };
+
+    // Member Search Event Listener
+    const searchInput = document.getElementById('memberSearchInput');
+    if (searchInput) {
+        let debounceTimer;
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => searchMembers(e.target.value.trim()), 300);
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!searchInput.contains(e.target) && !document.getElementById('memberSearchResults').contains(e.target)) {
+                document.getElementById('memberSearchResults').style.display = 'none';
+            }
+        });
     }
 
-    const memberIdInputReg = document.getElementById('memberId');
-    if (memberIdInputReg) {
-        memberIdInputReg.addEventListener('blur', () => handleMemberLookup(memberIdInputReg.value.trim()));
+    async function checkDuplicate(field, value) {
+        if (!value) return false;
+
+        const excludeId = isEditMode ? document.getElementById('editRecordId').value : null;
+        const input = document.getElementById(field === 'serialNumber' ? 'serialNumber' : 'imei');
+        const submitBtn = document.querySelector('#warrantyForm button[type="submit"]');
+        const type = field === 'serialNumber' ? 'serial' : 'imei';
+
+        try {
+            const res = await fetch(`/api/warranties/check-duplicate?type=${type}&value=${encodeURIComponent(value)}${excludeId ? `&excludeId=${excludeId}` : ''}`);
+            const data = await res.json();
+
+            if (data.exists) {
+                input.classList.add('input-error');
+                submitBtn.disabled = true;
+                submitBtn.style.opacity = '0.5';
+                submitBtn.style.cursor = 'not-allowed';
+                return true;
+            } else {
+                input.classList.remove('input-error');
+                // Check if the other field is also error-free before enabling
+                const otherField = field === 'serialNumber' ? 'imei' : 'serialNumber';
+                const otherInput = document.getElementById(otherField);
+                if (!otherInput.classList.contains('input-error')) {
+                    submitBtn.disabled = false;
+                    submitBtn.style.opacity = '1';
+                    submitBtn.style.cursor = 'pointer';
+                }
+                return false;
+            }
+        } catch (err) {
+            console.error('Duplicate check error:', err);
+            return false;
+        }
+    }
+
+    // Duplicate Check Event Listeners
+    const serialInput = document.getElementById('serialNumber');
+    if (serialInput) {
+        serialInput.addEventListener('blur', () => checkDuplicate('serialNumber', serialInput.value.trim()));
+    }
+
+    const imeiInputReg = document.getElementById('imei');
+    if (imeiInputReg) {
+        imeiInputReg.addEventListener('blur', () => checkDuplicate('imei', imeiInputReg.value.trim()));
     }
 
     document.getElementById('backToDashBtn').addEventListener('click', () => showView('dashboard'));
@@ -745,12 +894,34 @@ document.addEventListener('DOMContentLoaded', () => {
             if (res.ok) {
                 const modalTitle = document.querySelector('#successModal h2');
                 const modalText = document.querySelector('#successModal p');
+                const printBtn = document.getElementById('printReceiptBtn');
+
                 if (isEditMode) {
                     modalTitle.textContent = 'อัปเดตข้อมูลสำเร็จ!';
                     modalText.textContent = 'ข้อมูลประกันภัยได้ถูกอัปเดตลงในระบบเรียบร้อยแล้ว';
                 } else {
                     modalTitle.textContent = 'ลงทะเบียนสำเร็จ!';
                     modalText.textContent = 'ข้อมูลการลงทะเบียนประกันภัยของคุณถูกบันทึกเรียบร้อยแล้ว';
+
+                    // If marked as paid, show print button
+                    const markPaid = document.getElementById('initialPaidCheck')?.checked;
+                    if (markPaid) {
+                        printBtn.style.display = 'block';
+                        printBtn.onclick = () => {
+                            openReceipt({
+                                policyNumber: data.policyNumber,
+                                receiptNo: 'RC-' + data.policyNumber + '-1',
+                                paidDate: new Date().toLocaleString('th-TH'),
+                                shopName: data.shopName,
+                                staffName: currentUser ? currentUser.staffName : (payload.staffName || '-'),
+                                customerName: `${data.customer.firstName} ${data.customer.lastName}`,
+                                customerPhone: data.customer.phone,
+                                customerAddress: data.customer.address,
+                                amount: payload.payment.method === 'Full Payment' ? payload.package.price : payload.payment.schedule[0].amount,
+                                description: payload.payment.method === 'Full Payment' ? `ชำระเต็มจำนวน แพ็กเกจ ${payload.package.plan}` : `ชำระค่าเบี้ยประกัน งวดที่ 1`
+                            });
+                        };
+                    }
                 }
                 document.getElementById('successModal').style.display = 'flex';
             } else {
@@ -763,6 +934,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('closeModal').addEventListener('click', () => {
         document.getElementById('successModal').style.display = 'none';
+        document.getElementById('printReceiptBtn').style.display = 'none'; // Reset button
         showView('dashboard');
     });
 

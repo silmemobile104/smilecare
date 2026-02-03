@@ -251,6 +251,33 @@ app.patch('/api/warranties/:id/payment', async (req, res) => {
     }
 });
 
+// Check for duplicate Serial or IMEI
+app.get('/api/warranties/check-duplicate', async (req, res) => {
+    try {
+        const { type, value, excludeId } = req.query;
+        if (!type || !value) return res.json({ exists: false });
+
+        const query = {};
+        if (type === 'serial') {
+            query['device.serial'] = value;
+        } else if (type === 'imei') {
+            query['device.imei'] = value;
+        } else {
+            return res.status(400).json({ message: 'Invalid type' });
+        }
+
+        // If editing, exclude the current record
+        if (excludeId && mongoose.Types.ObjectId.isValid(excludeId)) {
+            query._id = { $ne: excludeId };
+        }
+
+        const existing = await Warranty.findOne(query);
+        res.json({ exists: !!existing });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
 // Member API Routes
 
 // Get all members
@@ -290,21 +317,24 @@ app.post('/api/members', async (req, res) => {
     }
 });
 
-// Lookup member by phone or memberId
+// Lookup members by phone, memberId, or Name (Partial match)
 app.get('/api/members/lookup', async (req, res) => {
     try {
         const { query } = req.query;
         if (!query) return res.status(400).json({ success: false, message: 'กรุณาระบุข้อมูลสำหรับค้นหา' });
 
-        const member = await Member.findOne({
+        // Search in multiple fields using case-insensitive regex
+        const searchRegex = new RegExp(query, 'i');
+        const members = await Member.find({
             $or: [
-                { phone: query },
-                { memberId: query }
+                { phone: searchRegex },
+                { memberId: searchRegex },
+                { firstName: searchRegex },
+                { lastName: searchRegex }
             ]
-        });
+        }).limit(10); // Limit results for UI performance
 
-        if (!member) return res.status(404).json({ success: false, message: 'ไม่พบข้อมูลสมาชิก' });
-        res.json({ success: true, member });
+        res.json({ success: true, members });
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });
     }
