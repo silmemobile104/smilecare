@@ -283,12 +283,12 @@
                 <div class="row">
                     <div class="col w-40">
                         <span class="label">เลขที่สมาชิก</span>
-                        <span class="dotted-line" id="doc_memberId" style="width: 150px;"></span>
+                        <span id="doc_memberId" style="width: 150px;"></span>
                     </div>
                     <div class="col w-60">
                         <span class="label" style="font-weight: bold;">สัญญาตะกาฟุลอุบัติเหตุสำหรับโทรศัพท์มือถือ</span>
                         <span class="label">กธ.</span>
-                        <span id="doc_policyNumber" style="width: 120px; font-weight: bold;"></span>
+                        <span id="doc_policyNumber" style="width: 120px; font-weight: bold; font-size: 25px;"></span>
                     </div>
                 </div>
 
@@ -317,7 +317,7 @@
                         </div>
                     </div>
                     <div class="col w-40">
-                        <span class="section-title">สถานที่ตั้ง</span>
+                        <span class="section-title">สถานที่ตั้งบริษัท</span>
                         <div class="address-box">
                             62 ถนนพิพิธภักดี ตำบลสะเตง อำเภอเมืองยะลา จังหวัดยะลา
                         </div>
@@ -405,6 +405,8 @@
                             <span class="label" style="margin-left: 20px;">มูลค่าคุ้มครอง</span>
                             <span id="doc_packagePrice" style="font-weight: bold; margin-left: 5px;"></span>
                             <span class="label" style="margin-left: 5px;">บาท</span>
+                            <span class="label"
+                                style="margin-left: 5px;">(ไม่จำกัดจำนวนครั้งแต่ต้องไม่เกินวงเงินคุ้มครอง)</span>
                         </div>
                     </div>
                 </div>
@@ -436,35 +438,38 @@
                     <div class="col w-100" style="padding: 0;">
                         <table class="installment-table">
                             <tr>
-                                <td rowspan="3" style="width: 18%; vertical-align: top;">5.2 ชำระแบ่งจ่าย 3 งวด</td>
-                                <td style="width: 18%;">งวดที่ 1 (<span id="doc_status_1">-</span>)</td>
-                                <td style="width: 8%; text-align: right;"><span id="doc_amt_1">-</span></td>
-                                <td style="width: 5%; border-left: none;">บาท</td>
-                                <td rowspan="3" style="width: 12%; vertical-align: top; text-align: center;">
-                                    ความคุ้มครอง
-                                </td>
-                                <td style="width: 8%; text-align: center;">10%</td>
-                                <td style="width: 15%;">วงเงินไม่เกิน</td>
-                                <td style="text-align: right;"><span id="doc_limit_1">-</span></td>
-                                <td style="width: 5%; border-left: none;">บาท</td>
+                                <td rowspan="4" style="width: 15%; vertical-align: top;">5.2 ชำระแบ่งจ่าย 3 งวด</td>
+                                
+                                <td style="width: 10%; text-align: center;">งวด</td>
+                                <td style="width: 16%; text-align: center;">กำหนดจ่าย</td>
+                                <td style="width: 16%; text-align: center;">สถานะ</td>
+                                <td style="width: 10%; text-align: center;">จำนวนเงิน</td>
+                                <td style="width: 15%; text-align: center;">% ความคุ้มครอง</td>
+                                <td style="width: 12%; text-align: center;">วงเงินไม่เกิน</td>
                             </tr>
                             <tr>
-                                <td>งวดที่ 2 (<span id="doc_status_2">-</span>)</td>
-                                <td style="text-align: right;"><span id="doc_amt_2">-</span></td>
-                                <td style="border-left: none;">บาท</td>
+                                <td>งวดที่ 1</td>
+                                <td style="text-align: center;"><span id="doc_due_1">-</span></td>
+                                <td style="text-align: center;"><span id="doc_status_1">-</span></td>
+                                <td style="text-align: right;"><span id="doc_amt_1">-</span><span style="width: 5%; border-left: none;">บาท</span></td>
+                                <td style="text-align: center;">10%</td>
+                                <td style="text-align: right;"><span id="doc_limit_1">-</span><span style="width: 5%; border-left: none;">บาท</span></td>
+                            </tr>
+                            <tr>
+                                <td>งวดที่ 2</td>
+                                <td style="text-align: center;"><span id="doc_due_2">-</span></td>
+                                <td style="text-align: center;"><span id="doc_status_2">-</span></td>
+                                <td style="text-align: right;"><span id="doc_amt_2">-</span><span style="width: 5%; border-left: none;">บาท</span></td>
                                 <td style="text-align: center;">30%</td>
-                                <td>วงเงินไม่เกิน</td>
-                                <td style="text-align: right;"><span id="doc_limit_2">-</span></td>
-                                <td style="border-left: none;">บาท</td>
+                                <td style="text-align: right;"><span id="doc_limit_2">-</span><span style="width: 5%; border-left: none;">บาท</span></td>
                             </tr>
                             <tr>
-                                <td>งวดที่ 3 (<span id="doc_status_3">-</span>)</td>
-                                <td style="text-align: right;"><span id="doc_amt_3">-</span></td>
-                                <td style="border-left: none;">บาท</td>
+                                <td>งวดที่ 3</td>
+                                <td style="text-align: center;"><span id="doc_due_3">-</span></td>
+                                <td style="text-align: center;"><span id="doc_status_3">-</span></td>
+                                <td style="text-align: right;"><span id="doc_amt_3">-</span><span style="width: 5%; border-left: none;">บาท</span></td>
                                 <td style="text-align: center;">100%</td>
-                                <td>วงเงินไม่เกิน</td>
-                                <td style="text-align: right;"><span id="doc_limit_3">-</span></td>
-                                <td style="border-left: none;">บาท</td>
+                                <td style="text-align: right;"><span id="doc_limit_3">-</span><span style="width: 5%; border-left: none;">บาท</span></td>
                             </tr>
                         </table>
                         <div class="payment-note" style="padding: 5px 10px;">
@@ -694,6 +699,9 @@
                     data.payment.schedule.forEach(s => {
                         const amtEl = document.getElementById(`doc_amt_${s.installmentNo}`);
                         if (amtEl) amtEl.textContent = s.amount.toLocaleString();
+
+                        const dueEl = document.getElementById(`doc_due_${s.installmentNo}`);
+                        if (dueEl) dueEl.textContent = s.dueDate ? formatThaiDate(s.dueDate) : '-';
 
                         const statusEl = document.getElementById(`doc_status_${s.installmentNo}`);
                         if (statusEl) {
