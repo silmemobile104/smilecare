@@ -854,14 +854,18 @@ section {
     background-color: #fef2f2 !important;
 }
 
+.text-danger {
+    color: #ef4444;
+    font-size: 0.85rem;
+    margin-top: 4px;
+    font-weight: 600;
+    display: block;
+}
+
 .validation-message {
     color: #ef4444;
     font-size: 0.85rem;
     margin-top: 4px;
-    font-weight: 500;
-    display: none;
-}
-
-.input-error+.validation-message {
+    font-weight: 600;
     display: block;
 }

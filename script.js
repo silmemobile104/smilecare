@@ -726,33 +726,37 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function checkDuplicate(field, value) {
-        if (!value) return false;
+        const input = document.getElementById(field === 'serialNumber' ? 'serialNumber' : 'imei');
+        const label = input.parentNode.querySelector('label');
+        const baseLabel = field === 'serialNumber' ? 'เลขซีเรียล (Serial Number)' : 'เลข IMEI';
+
+        if (!value) {
+            input.classList.remove('input-error');
+            label.innerHTML = baseLabel;
+            label.style.color = '';
+            updateSubmitButtonState();
+            return false;
+        }
 
         const excludeId = isEditMode ? document.getElementById('editRecordId').value : null;
-        const input = document.getElementById(field === 'serialNumber' ? 'serialNumber' : 'imei');
-        const submitBtn = document.querySelector('#warrantyForm button[type="submit"]');
         const type = field === 'serialNumber' ? 'serial' : 'imei';
 
         try {
-            const res = await fetch(`/api/warranties/check-duplicate?type=${type}&value=${encodeURIComponent(value)}${excludeId ? `&excludeId=${excludeId}` : ''}`);
+            const url = `/api/warranties/check-duplicate?type=${type}&value=${encodeURIComponent(value)}${excludeId ? `&excludeId=${excludeId}` : ''}`;
+            const res = await fetch(url);
             const data = await res.json();
 
             if (data.exists) {
                 input.classList.add('input-error');
-                submitBtn.disabled = true;
-                submitBtn.style.opacity = '0.5';
-                submitBtn.style.cursor = 'not-allowed';
+                label.innerHTML = `${baseLabel} <span style="color: #ef4444;">*เลขนี้เคยลงทะเบียนแล้ว</span>`;
+                label.style.color = '#ef4444';
+                updateSubmitButtonState();
                 return true;
             } else {
                 input.classList.remove('input-error');
-                // Check if the other field is also error-free before enabling
-                const otherField = field === 'serialNumber' ? 'imei' : 'serialNumber';
-                const otherInput = document.getElementById(otherField);
-                if (!otherInput.classList.contains('input-error')) {
-                    submitBtn.disabled = false;
-                    submitBtn.style.opacity = '1';
-                    submitBtn.style.cursor = 'pointer';
-                }
+                label.innerHTML = baseLabel;
+                label.style.color = '';
+                updateSubmitButtonState();
                 return false;
             }
         } catch (err) {
@@ -761,15 +765,34 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function updateSubmitButtonState() {
+        const submitBtn = document.querySelector('#warrantyForm button[type="submit"]');
+        const hasErrors = document.querySelectorAll('#warrantyForm .input-error').length > 0;
+
+        if (hasErrors) {
+            submitBtn.disabled = true;
+            submitBtn.style.opacity = '0.5';
+            submitBtn.style.cursor = 'not-allowed';
+        } else {
+            submitBtn.disabled = false;
+            submitBtn.style.opacity = '1';
+            submitBtn.style.cursor = 'pointer';
+        }
+    }
+
     // Duplicate Check Event Listeners
     const serialInput = document.getElementById('serialNumber');
     if (serialInput) {
-        serialInput.addEventListener('blur', () => checkDuplicate('serialNumber', serialInput.value.trim()));
+        serialInput.addEventListener('blur', () => {
+            checkDuplicate('serialNumber', serialInput.value.trim());
+        });
     }
 
     const imeiInputReg = document.getElementById('imei');
     if (imeiInputReg) {
-        imeiInputReg.addEventListener('blur', () => checkDuplicate('imei', imeiInputReg.value.trim()));
+        imeiInputReg.addEventListener('blur', () => {
+            checkDuplicate('imei', imeiInputReg.value.trim());
+        });
     }
 
     document.getElementById('backToDashBtn').addEventListener('click', () => showView('dashboard'));
@@ -1005,6 +1028,24 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('memberIdCardAddress').value = member.idCardAddress || '';
             document.getElementById('memberShippingAddress').value = member.shippingAddress || '';
 
+            // New Thai ID fields
+            document.getElementById('memberPrefix').value = member.prefix || '';
+            document.getElementById('memberGender').value = member.gender || '';
+            document.getElementById('memberFirstNameEn').value = member.firstNameEn || '';
+            document.getElementById('memberLastNameEn').value = member.lastNameEn || '';
+            document.getElementById('memberCitizenId').value = member.citizenId || '';
+            document.getElementById('memberIssueDate').value = member.issueDate ? member.issueDate.split('T')[0] : '';
+            document.getElementById('memberExpiryDate').value = member.expiryDate ? member.expiryDate.split('T')[0] : '';
+
+            const photoContainer = document.getElementById('smartCardPhotoContainer');
+            const photoImg = document.getElementById('smartCardPhoto');
+            if (member.photo) {
+                photoImg.src = member.photo;
+                photoContainer.style.display = 'block';
+            } else {
+                photoContainer.style.display = 'none';
+            }
+
             document.getElementById('memberModal').style.display = 'flex';
         } catch (err) {
             console.error('Fetch member error:', err);
@@ -1019,6 +1060,22 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('memberForm').reset();
             document.getElementById('editMemberId').value = '';
             document.getElementById('memberIdDisplay').value = ''; // Clear display
+            document.getElementById('memberCitizenId').value = '';
+            document.getElementById('memberPrefix').value = '';
+            document.getElementById('memberGender').value = '';
+            document.getElementById('memberFirstNameEn').value = '';
+            document.getElementById('memberLastNameEn').value = '';
+            document.getElementById('memberIssueDate').value = '';
+            document.getElementById('memberExpiryDate').value = '';
+            document.getElementById('smartCardPhotoContainer').style.display = 'none';
+            document.getElementById('smartCardPhoto').src = '';
+
+            // Re-enable fields if they were disabled (though we keep them readonly for SC integration)
+            document.getElementById('memberFirstName').readOnly = true;
+            document.getElementById('memberLastName').readOnly = true;
+            document.getElementById('memberBirthdate').readOnly = true;
+            document.getElementById('memberIdCardAddress').readOnly = true;
+
             document.getElementById('memberModal').style.display = 'flex';
         });
     }
@@ -1049,7 +1106,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 phone: document.getElementById('memberPhone').value,
                 birthdate: document.getElementById('memberBirthdate').value,
                 idCardAddress: document.getElementById('memberIdCardAddress').value,
-                shippingAddress: document.getElementById('memberShippingAddress').value
+                address: document.getElementById('memberIdCardAddress').value,
+                shippingAddress: document.getElementById('memberShippingAddress').value,
+                citizenId: document.getElementById('memberCitizenId').value,
+                prefix: document.getElementById('memberPrefix').value,
+                firstNameEn: document.getElementById('memberFirstNameEn').value,
+                lastNameEn: document.getElementById('memberLastNameEn').value,
+                gender: document.getElementById('memberGender').value,
+                issueDate: document.getElementById('memberIssueDate').value,
+                expiryDate: document.getElementById('memberExpiryDate').value,
+                photo: document.getElementById('smartCardPhoto').src.startsWith('data:image') ? document.getElementById('smartCardPhoto').src : undefined
             };
 
             try {
@@ -1214,6 +1280,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (titleElem) titleElem.textContent = 'แก้ไขข้อมูลร้านค้า';
                 if (idDisplayElem) idDisplayElem.value = shop.shopId;
                 if (nameElem) nameElem.value = shop.shopName;
+                // Update to match new ID
+                const modalNameElem = document.getElementById('shopModalName');
+                if (modalNameElem) modalNameElem.value = shop.shopName;
                 if (locElem) locElem.value = shop.location || '';
 
                 shopModal.style.display = 'flex';
@@ -1223,6 +1292,79 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- SMART CARD INTEGRATION ---
+    async function connectSmartCard() {
+        const btn = document.getElementById('readSmartCardBtn');
+        const originalText = btn.innerHTML;
+
+        try {
+            btn.disabled = true;
+            btn.innerHTML = '⌛ กำลังเรียกอ่านข้อมูลจาก Smart Card Agent...';
+
+            const response = await fetch('http://localhost:3001/api/read-card');
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'ไม่สามารถอ่านข้อมูลจากบัตรได้');
+            }
+
+            const result = await response.json();
+
+            if (result.success && result.data) {
+                populateMemberFormFromCard(result.data);
+                alert('อ่านข้อมูลจากบัตรเรียบร้อยแล้ว');
+            } else {
+                throw new Error(result.message || 'ข้อมูลไม่สมบูรณ์');
+            }
+
+        } catch (err) {
+            console.error('Smart Card Error:', err);
+            // Specific error message if agent is not running
+            if (err.name === 'TypeError' && err.message.toLowerCase().includes('failed to fetch')) {
+                alert('⚠️ ไม่สามารถเชื่อมต่อกับ Smart Card Agent ได้\n\n1. ตรวจสอบว่ารันคำสั่ง "npm start" ในโฟลเดอร์ smartcard-agent\n2. เข้าไปที่ http://localhost:3001 เพื่อเช็คสถานะ');
+            } else {
+                alert('ข้อผิดพลาด: ' + err.message);
+            }
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }
+
+    function populateMemberFormFromCard(data) {
+        document.getElementById('memberCitizenId').value = data.citizenId;
+        document.getElementById('memberPrefix').value = data.prefix;
+        document.getElementById('memberFirstName').value = data.firstName;
+        document.getElementById('memberLastName').value = data.lastName;
+        document.getElementById('memberFirstNameEn').value = data.firstNameEn;
+        document.getElementById('memberLastNameEn').value = data.lastNameEn;
+        document.getElementById('memberBirthdate').value = data.birthdate;
+        document.getElementById('memberGender').value = data.gender;
+        document.getElementById('memberIdCardAddress').value = data.address;
+        document.getElementById('memberIssueDate').value = data.issueDate;
+        document.getElementById('memberExpiryDate').value = data.expiryDate;
+
+        const photoContainer = document.getElementById('smartCardPhotoContainer');
+        const photoImg = document.getElementById('smartCardPhoto');
+        if (data.photo) {
+            photoImg.src = data.photo;
+            photoContainer.style.display = 'block';
+        } else {
+            photoContainer.style.display = 'none';
+        }
+    }
+
+    // Helper to decode TIS-620 to UTF-8 (Common for Thai ID Card reading)
+    function decodeThai(buffer) {
+        const decoder = new TextDecoder('tis-620');
+        return decoder.decode(buffer).trim();
+    }
+
+    const readSmartCardBtn = document.getElementById('readSmartCardBtn');
+    if (readSmartCardBtn) {
+        readSmartCardBtn.addEventListener('click', connectSmartCard);
+    }
+
     // --- INITIALIZATION ---
     if (currentUser) {
         updateStaffInfo();
@@ -1230,4 +1372,5 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         showView('login');
     }
+    console.log('SmileCare script initialized successfully.');
 });

@@ -613,12 +613,10 @@
                         <div class="form-group"><label>เลขซีเรียล (Serial Number)</label>
                             <input type="text" id="serialNumber" required minlength="10" maxlength="10"
                                 placeholder="ต้องครบ 10 หลัก">
-                            <div class="validation-message" id="serialError">หมายเลขนี้มีอยู่ในระบบแล้ว</div>
                         </div>
                         <div class="form-group" id="imeiGroup"><label>เลข IMEI</label>
                             <input type="text" id="imei" minlength="15" maxlength="15" pattern="\d{15}"
                                 placeholder="ตัวเลข 15 หลัก">
-                            <div class="validation-message" id="imeiError">หมายเลขนี้มีอยู่ในระบบแล้ว</div>
                         </div>
                         <div class="form-group"><label>วันสิ้นสุดประกันศูนย์</label>
                             <input type="date" id="officialWarrantyEnd" required>
@@ -767,19 +765,54 @@
     <div id="memberModal" class="modal">
         <div class="modal-content" style="max-width: 600px;">
             <h2 id="memberModalTitle">เพิ่มข้อมูลสมาชิก</h2>
+            <div style="margin-bottom: 1.5rem;">
+                <button type="button" id="readSmartCardBtn" class="submit-btn full-width"
+                    style="background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%); margin-bottom: 1rem;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                        <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+                        <line x1="7" y1="8" x2="17" y2="8"></line>
+                        <line x1="7" y1="12" x2="17" y2="12"></line>
+                        <line x1="7" y1="16" x2="13" y2="16"></line>
+                    </svg>
+                    🪪 เสียบบัตรประชาชน (Read Smart Card)
+                </button>
+            </div>
             <form id="memberForm">
                 <input type="hidden" id="editMemberId">
+                <div id="smartCardPhotoContainer" style="display: none; text-align: center; margin-bottom: 1rem;">
+                    <img id="smartCardPhoto" src="" alt="Member Photo"
+                        style="width: 100px; height: 120px; object-fit: cover; border-radius: 8px; border: 2px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                </div>
                 <div class="grid-row">
-                    <div class="form-group full-width"><label>รหัสสมาชิก</label><input type="text" id="memberIdDisplay"
-                            readonly class="readonly-field" placeholder="ออกโดยระบบอัตโนมัติ"></div>
-                    <div class="form-group"><label>ชื่อ</label><input type="text" id="memberFirstName" required></div>
-                    <div class="form-group"><label>นามสกุล</label><input type="text" id="memberLastName" required></div>
-                    <div class="form-group"><label>เบอร์โทรศัพท์</label><input type="tel" id="memberPhone" required>
-                    </div>
-                    <div class="form-group"><label>วันเกิด</label><input type="date" id="memberBirthdate"></div>
+                    <div class="form-group"><label>รหัสสมาชิก</label><input type="text" id="memberIdDisplay" readonly
+                            class="readonly-field" placeholder="ออกโดยระบบอัตโนมัติ"></div>
+                    <div class="form-group"><label>เลขบัตรประชาชน</label><input type="text" id="memberCitizenId"
+                            readonly class="readonly-field" placeholder="จากการเสียบบัตร"></div>
+                    <div class="form-group"><label>คำนำหน้า</label><input type="text" id="memberPrefix" readonly
+                            class="readonly-field"></div>
+                    <div class="form-group"><label>เพศ</label><input type="text" id="memberGender" readonly
+                            class="readonly-field"></div>
+                    <div class="form-group"><label>ชื่อ (TH)</label><input type="text" id="memberFirstName" required
+                            readonly class="readonly-field"></div>
+                    <div class="form-group"><label>นามสกุล (TH)</label><input type="text" id="memberLastName" required
+                            readonly class="readonly-field"></div>
+                    <div class="form-group"><label>First Name (EN)</label><input type="text" id="memberFirstNameEn"
+                            readonly class="readonly-field"></div>
+                    <div class="form-group"><label>Last Name (EN)</label><input type="text" id="memberLastNameEn"
+                            readonly class="readonly-field"></div>
+                    <div class="form-group"><label>วันเกิด</label><input type="date" id="memberBirthdate" readonly
+                            class="readonly-field"></div>
+                    <div class="form-group"><label>เบอร์โทรศัพท์</label><input type="tel" id="memberPhone" required
+                            placeholder="0xxxxxxxxx (กรอกมือ)"></div>
+                    <div class="form-group"><label>วันออกบัตร</label><input type="date" id="memberIssueDate" readonly
+                            class="readonly-field"></div>
+                    <div class="form-group"><label>วันหมดอายุ</label><input type="date" id="memberExpiryDate" readonly
+                            class="readonly-field"></div>
+
                     <div class="form-group full-width">
                         <label>ที่อยู่ตามหน้าบัตร (ID Card Address)</label>
-                        <textarea id="memberIdCardAddress" rows="3"></textarea>
+                        <textarea id="memberIdCardAddress" rows="3" readonly class="readonly-field"></textarea>
                     </div>
                     <div class="form-group full-width">
                         <div
@@ -808,7 +841,7 @@
                 <div class="grid-row">
                     <div class="form-group full-width"><label>รหัสร้านค้า</label><input type="text" id="shopIdDisplay"
                             readonly class="readonly-field" placeholder="ออกโดยระบบอัตโนมัติ"></div>
-                    <div class="form-group full-width"><label>ชื่อร้านค้า</label><input type="text" id="shopName"
+                    <div class="form-group full-width"><label>ชื่อร้านค้า</label><input type="text" id="shopModalName"
                             required></div>
                     <div class="form-group full-width">
                         <label>สถานที่ตั้ง (Location)</label>

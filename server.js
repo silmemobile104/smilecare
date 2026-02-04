@@ -76,12 +76,21 @@ const Warranty = mongoose.model('Warranty', WarrantySchema);
 // Member Schema
 const MemberSchema = new mongoose.Schema({
     memberId: { type: String, unique: true, index: true, required: true },
+    citizenId: { type: String, unique: true, index: true },
+    prefix: { type: String },
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
+    firstNameEn: { type: String },
+    lastNameEn: { type: String },
     phone: { type: String, unique: true, index: true, required: true },
     birthdate: { type: Date },
+    gender: { type: String },
+    address: { type: String },
     idCardAddress: { type: String },
-    shippingAddress: { type: String }
+    shippingAddress: { type: String },
+    issueDate: { type: Date },
+    expiryDate: { type: Date },
+    photo: { type: String } // Base64 encoded image string
 }, { timestamps: true });
 
 const Member = mongoose.model('Member', MemberSchema);
@@ -253,6 +262,7 @@ app.patch('/api/warranties/:id/payment', async (req, res) => {
 
 // Check for duplicate Serial or IMEI
 app.get('/api/warranties/check-duplicate', async (req, res) => {
+    console.log('API Hit: /api/warranties/check-duplicate', req.query);
     try {
         const { type, value, excludeId } = req.query;
         if (!type || !value) return res.json({ exists: false });
@@ -293,7 +303,15 @@ app.get('/api/members', async (req, res) => {
 // Create new member
 app.post('/api/members', async (req, res) => {
     try {
-        const { phone } = req.body;
+        const { phone, citizenId } = req.body;
+
+        if (citizenId) {
+            const existingCitizen = await Member.findOne({ citizenId });
+            if (existingCitizen) {
+                return res.status(400).json({ success: false, message: 'เลขบัตรประชาชนนี้ถูกใช้งานแล้ว' });
+            }
+        }
+
         const existingMember = await Member.findOne({ phone });
         if (existingMember) {
             return res.status(400).json({ success: false, message: 'เบอร์โทรศัพท์นี้ถูกใช้งานแล้ว' });
@@ -354,11 +372,18 @@ app.get('/api/members/:id', async (req, res) => {
 // Update member
 app.put('/api/members/:id', async (req, res) => {
     try {
-        const { phone } = req.body;
+        const { phone, citizenId } = req.body;
         // Check if phone unique but not current member
         const existingMember = await Member.findOne({ phone, _id: { $ne: req.params.id } });
         if (existingMember) {
             return res.status(400).json({ success: false, message: 'เบอร์โทรศัพท์นี้ถูกใช้งานโดยสมาชิกท่านอื่นแล้ว' });
+        }
+
+        if (citizenId) {
+            const existingCitizen = await Member.findOne({ citizenId, _id: { $ne: req.params.id } });
+            if (existingCitizen) {
+                return res.status(400).json({ success: false, message: 'เลขบัตรประชาชนนี้ถูกใช้งานโดยสมาชิกท่านอื่นแล้ว' });
+            }
         }
 
         const updatedMember = await Member.findByIdAndUpdate(
