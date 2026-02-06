@@ -60,13 +60,19 @@ const WarrantySchema = new mongoose.Schema({
         method: String,
         status: { type: String, default: 'Pending' },
         paidDate: Date,
+        paidCash: Number,
+        paidTransfer: Number,
+        refId: String,
         schedule: [{
             installmentNo: Number,
             amount: Number,
             dueDate: Date,
             graceDate: Date,
             status: { type: String, default: 'Pending' },
-            paidDate: Date
+            paidDate: Date,
+            paidCash: Number,
+            paidTransfer: Number,
+            refId: String
         }]
     }
 }, { timestamps: true });
@@ -203,6 +209,33 @@ app.post('/api/warranties', async (req, res) => {
     }
 });
 
+// Check for duplicate Serial or IMEI
+app.get('/api/warranties/check-duplicate', async (req, res) => {
+    try {
+        const { type, value, excludeId } = req.query;
+        if (!type || !value) return res.json({ exists: false });
+
+        const query = {};
+        if (type === 'serial') {
+            query['device.serial'] = value;
+        } else if (type === 'imei') {
+            query['device.imei'] = value;
+        } else {
+            return res.status(400).json({ message: 'Invalid type' });
+        }
+
+        // If editing, exclude the current record
+        if (excludeId && mongoose.Types.ObjectId.isValid(excludeId)) {
+            query._id = { $ne: excludeId };
+        }
+
+        const existing = await Warranty.findOne(query);
+        res.json({ exists: !!existing });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
 // Get single warranty
 app.get('/api/warranties/:id', async (req, res) => {
     try {
@@ -236,21 +269,50 @@ app.put('/api/warranties/:id', async (req, res) => {
 // Update Payment Status
 app.patch('/api/warranties/:id/payment', async (req, res) => {
     try {
-        const { installmentNo } = req.body;
+        const { installmentNo, payAllRemaining, paidCash, paidTransfer, refId } = req.body;
         const warranty = await Warranty.findById(req.params.id);
         if (!warranty) return res.status(404).json({ message: 'Record not found' });
 
-        if (installmentNo) {
+        if (payAllRemaining) {
+            // Update all pending installments
+            warranty.payment.status = 'Paid';
+            warranty.payment.paidDate = new Date();
+            warranty.payment.paidCash = (warranty.payment.paidCash || 0) + (paidCash || 0);
+            warranty.payment.paidTransfer = (warranty.payment.paidTransfer || 0) + (paidTransfer || 0);
+
+            warranty.payment.schedule.forEach(inst => {
+                if (inst.status !== 'Paid') {
+                    inst.status = 'Paid';
+                    inst.paidDate = new Date();
+                    inst.paidCash = paidCash; // Note: Usually shared or total is recorded
+                    inst.paidTransfer = paidTransfer;
+                    inst.refId = refId;
+                }
+            });
+        } else if (installmentNo) {
             // Update specific installment
             const inst = warranty.payment.schedule.find(s => s.installmentNo === installmentNo);
             if (inst) {
                 inst.status = 'Paid';
                 inst.paidDate = new Date();
+                inst.paidCash = paidCash;
+                inst.paidTransfer = paidTransfer;
+                inst.refId = refId;
+            }
+
+            // Check if all are paid
+            const allPaid = warranty.payment.schedule.every(s => s.status === 'Paid');
+            if (allPaid) {
+                warranty.payment.status = 'Paid';
+                warranty.payment.paidDate = new Date();
             }
         } else {
             // Update full payment
             warranty.payment.status = 'Paid';
             warranty.payment.paidDate = new Date();
+            warranty.payment.paidCash = paidCash;
+            warranty.payment.paidTransfer = paidTransfer;
+            warranty.payment.refId = refId;
         }
 
         await warranty.save();
@@ -260,29 +322,12 @@ app.patch('/api/warranties/:id/payment', async (req, res) => {
     }
 });
 
-// Check for duplicate Serial or IMEI
-app.get('/api/warranties/check-duplicate', async (req, res) => {
-    console.log('API Hit: /api/warranties/check-duplicate', req.query);
+// Delete warranty
+app.delete('/api/warranties/:id', async (req, res) => {
     try {
-        const { type, value, excludeId } = req.query;
-        if (!type || !value) return res.json({ exists: false });
-
-        const query = {};
-        if (type === 'serial') {
-            query['device.serial'] = value;
-        } else if (type === 'imei') {
-            query['device.imei'] = value;
-        } else {
-            return res.status(400).json({ message: 'Invalid type' });
-        }
-
-        // If editing, exclude the current record
-        if (excludeId && mongoose.Types.ObjectId.isValid(excludeId)) {
-            query._id = { $ne: excludeId };
-        }
-
-        const existing = await Warranty.findOne(query);
-        res.json({ exists: !!existing });
+        const deleted = await Warranty.findByIdAndDelete(req.params.id);
+        if (!deleted) return res.status(404).json({ message: 'Record not found' });
+        res.json({ success: true, message: 'Record deleted successfully' });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
@@ -398,6 +443,17 @@ app.put('/api/members/:id', async (req, res) => {
     }
 });
 
+// Delete member
+app.delete('/api/members/:id', async (req, res) => {
+    try {
+        const deleted = await Member.findByIdAndDelete(req.params.id);
+        if (!deleted) return res.status(404).json({ success: false, message: 'ไม่พบข้อมูลสมาชิก' });
+        res.json({ success: true, message: 'ลบข้อมูลสมาชิกสำเร็จ' });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
 // --- Shops API ---
 
 // Get all shops
@@ -446,6 +502,17 @@ app.put('/api/shops/:id', async (req, res) => {
         res.json({ success: true, shop: updatedShop });
     } catch (err) {
         res.status(400).json({ success: false, message: err.message });
+    }
+});
+
+// Delete shop
+app.delete('/api/shops/:id', async (req, res) => {
+    try {
+        const deleted = await Shop.findByIdAndDelete(req.params.id);
+        if (!deleted) return res.status(404).json({ success: false, message: 'ไม่พบข้อมูลร้านค้า' });
+        res.json({ success: true, message: 'ลบข้อมูลร้านค้าสำเร็จ' });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
     }
 });
 

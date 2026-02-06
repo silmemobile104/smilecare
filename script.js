@@ -266,6 +266,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         <button class="print-btn" data-id="${r._id}" title="พิมพ์เอกสาร">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
                         </button>
+                        <button class="delete-btn" data-id="${r._id}" title="ลบข้อมูล" style="color: #ef4444;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                        </button>
                     </div>
                 </td>
             </tr>
@@ -283,6 +286,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.open(`document.html?id=${btn.dataset.id}`, '_blank');
             });
         });
+
+        // Add listeners to delete buttons
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', () => deleteWarranty(btn.dataset.id));
+        });
+    }
+
+    async function deleteWarranty(id) {
+        if (!confirm('⚠️ คำเตือน: คุณต้องการลบข้อมูลประกันนี้ใช่หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้')) return;
+
+        try {
+            const res = await fetch(`/api/warranties/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                alert('ลบข้อมูลสำเร็จ');
+                fetchWarranties();
+            } else {
+                const data = await res.json();
+                alert(data.message || 'เกิดข้อผิดพลาดในการลบข้อมูล');
+            }
+        } catch (err) {
+            console.error('Delete error:', err);
+        }
     }
 
     function openReceipt(data) {
@@ -336,6 +361,11 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('imei').value = data.device.imei || '';
             document.getElementById('deviceValue').value = data.device.deviceValue || '';
             document.getElementById('officialWarrantyEnd').value = formatDate(data.device.officialWarrantyEnd);
+
+            // Set Protection Type based on Plan name case (Plan A/B/C/D vs Plan a/b/c)
+            const isScreenOnly = ['Plan a', 'Plan b', 'Plan c'].includes(data.package.plan);
+            document.getElementById('protectionType').value = isScreenOnly ? 'Screen' : 'Full';
+            updatePackageOptions();
             document.getElementById('package').value = data.package.plan;
 
             document.getElementById('startDate').value = data.warrantyDates.start;
@@ -352,8 +382,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Show Payment Management Section
             const pmSection = document.getElementById('paymentManagementSection');
-            pmSection.style.display = 'block';
-            document.getElementById('initialPaymentCheck').style.display = 'none';
+            if (pmSection) pmSection.style.display = 'block';
+
+            const ipc = document.getElementById('initialPaymentCheck');
+            if (ipc) ipc.style.display = 'none';
+
             renderPaymentManagement(data);
 
         } catch (err) {
@@ -362,8 +395,47 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function updatePackageOptions() {
+        const type = document.getElementById('protectionType').value;
+        const packageSelect = document.getElementById('package');
+        const currentVal = packageSelect.value;
+
+        let options = '';
+        if (type === 'Full') {
+            options = `
+                <option value="" disabled>เลือกแผนประกัน</option>
+                <option value="Plan A">Plan A</option>
+                <option value="Plan B">Plan B</option>
+                <option value="Plan C">Plan C</option>
+                <option value="Plan D">Plan D</option>
+            `;
+        } else {
+            options = `
+                <option value="" disabled>เลือกแผนประกัน</option>
+                <option value="Plan a">Plan a</option>
+                <option value="Plan b">Plan b</option>
+                <option value="Plan c">Plan c</option>
+            `;
+        }
+
+        packageSelect.innerHTML = options;
+
+        // Try to restore value if it still exists in the new list
+        if (Array.from(packageSelect.options).some(opt => opt.value === currentVal)) {
+            packageSelect.value = currentVal;
+        } else {
+            packageSelect.selectedIndex = 0;
+        }
+        updatePaymentUI();
+    }
+
     // --- REGISTRATION LOGIC ---
     function initRegistrationForm() {
+        const protectionSelect = document.getElementById('protectionType');
+        if (protectionSelect) {
+            protectionSelect.addEventListener('change', updatePackageOptions);
+        }
+        updatePackageOptions(); // Initial call
         if (isEditMode) return; // Don't reset if editing
 
         const form = document.getElementById('warrantyForm');
@@ -510,6 +582,11 @@ document.addEventListener('DOMContentLoaded', () => {
             fullSec.style.display = 'block';
             instSec.style.display = 'none';
             document.getElementById('fullPaymentAmount').textContent = `${data.package.price.toLocaleString()} บาท`;
+
+            // Debt Summary for Full Payment
+            document.getElementById('debtSummaryTotal').textContent = `${data.package.price.toLocaleString()} บาท`;
+            document.getElementById('debtSummaryRemaining').textContent = data.payment.status === 'Paid' ? '0 บาท' : `${data.package.price.toLocaleString()} บาท`;
+
             const statusText = document.getElementById('fullPaymentStatusText');
             const confirmBtn = document.getElementById('confirmFullPaymentBtn');
 
@@ -547,8 +624,15 @@ document.addEventListener('DOMContentLoaded', () => {
             fullSec.style.display = 'none';
             instSec.style.display = 'block';
             const body = document.getElementById('paymentStatusBody');
+            let remainingTotal = 0;
+            let pendingCount = 0;
+
             body.innerHTML = data.payment.schedule.map(s => {
                 const isPaid = s.status === 'Paid';
+                if (!isPaid) {
+                    remainingTotal += s.amount;
+                    pendingCount++;
+                }
                 const isOverdue = !isPaid && new Date(s.dueDate) < new Date();
                 const rowClass = isPaid ? 'paid-row' : (isOverdue ? 'overdue-row' : '');
 
@@ -563,7 +647,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         : `<span class="status-pending">${isOverdue ? 'เกินกำหนด' : 'ค้างชำระ'}</span>`}
                         </td>
                         <td>
-                            ${isPaid ? '-' : `<button type="button" class="receive-btn" data-id="${data._id}" data-no="${s.installmentNo}" data-amt="${s.amount}">รับชำระเงิน</button>`}
+                            ${isPaid ? '-' : `<button type="button" class="receive-btn" onclick="receivePayment('${data._id}', ${s.installmentNo}, ${s.amount})">รับชำระเงิน</button>`}
                         </td>
                         <td>
                             ${isPaid ? `<button type="button" class="print-receipt-btn receive-btn" style="background: var(--secondary); padding: 4px 8px;" data-no="${s.installmentNo}" data-amt="${s.amount}" data-date="${s.paidDate}">พิมพ์</button>` : '-'}
@@ -572,16 +656,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
             }).join('');
 
-            // Add listeners to individual installment buttons
-            body.querySelectorAll('.receive-btn:not(.print-receipt-btn)').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    receivePayment(btn.dataset.id, parseInt(btn.dataset.no), parseInt(btn.dataset.amt));
-                });
-            });
+            // Show/Hide Pay All Remaining button
+            const payAllContainer = document.getElementById('payAllRemainingContainer');
+            const payAllBtn = document.getElementById('payAllRemainingBtn');
+            if (pendingCount > 1) {
+                payAllContainer.style.display = 'block';
+                payAllBtn.onclick = () => receiveAllRemainingPayments(data._id, remainingTotal);
+                payAllBtn.textContent = `💰 ชำระเงินงวดที่เหลือทั้งหมด (${pendingCount} งวด: ${remainingTotal.toLocaleString()} บาท)`;
+            } else {
+                payAllContainer.style.display = 'none';
+            }
 
-            // Add listeners to individual print buttons
+            // Debt Summary for Installment
+            document.getElementById('debtSummaryTotal').textContent = `${data.package.price.toLocaleString()} บาท`;
+            document.getElementById('debtSummaryRemaining').textContent = `${remainingTotal.toLocaleString()} บาท`;
+
+            // Individual print listeners
             body.querySelectorAll('.print-receipt-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
+                btn.onclick = () => {
                     openReceipt({
                         policyNumber: data.policyNumber,
                         receiptNo: 'RC-' + data.policyNumber + '-' + btn.dataset.no,
@@ -594,61 +686,26 @@ document.addEventListener('DOMContentLoaded', () => {
                         amount: parseInt(btn.dataset.amt),
                         description: `ชำระค่าเบี้ยประกัน งวดที่ ${btn.dataset.no}`
                     });
-                });
-            });
-        }
-    }
-
-    async function receivePayment(id, installmentNo, amount) {
-        if (!confirm(`ยืนยันการรับชำระเงินจำนวน ${amount.toLocaleString()} บาท?`)) return;
-
-        try {
-            const res = await fetch(`/api/warranties/${id}/payment`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ installmentNo })
-            });
-            const data = await res.json();
-            if (res.ok) {
-                // Refresh modal data
-                const updatedRes = await fetch(`/api/warranties/${id}`);
-                const updatedData = await updatedRes.json();
-                currentEditData = updatedData; // CRITICAL: Update app state
-                renderPaymentManagement(updatedData);
-                fetchWarranties(); // Refresh dashboard list background
-
-                // Show Success Modal with Print Option
-                const modalTitle = document.querySelector('#successModal h2');
-                const modalText = document.querySelector('#successModal p');
-                const printBtn = document.getElementById('printReceiptBtn');
-
-                modalTitle.textContent = 'รับชำระเงินสำเร็จ!';
-                modalText.textContent = `บันทึกการชำระเงินจำนวน ${amount.toLocaleString()} บาท เรียบร้อยแล้ว`;
-
-                printBtn.style.display = 'block';
-                printBtn.onclick = () => {
-                    openReceipt({
-                        policyNumber: updatedData.policyNumber,
-                        receiptNo: 'RC-' + updatedData.policyNumber + '-' + (installmentNo || 'F'),
-                        paidDate: new Date().toLocaleString('th-TH'),
-                        shopName: updatedData.shopName,
-                        staffName: currentUser ? currentUser.staffName : (updatedData.staffName || '-'),
-                        customerName: `${updatedData.customer.firstName} ${updatedData.customer.lastName}`,
-                        customerPhone: updatedData.customer.phone,
-                        customerAddress: updatedData.customer.address,
-                        amount: amount,
-                        description: installmentNo ? `ชำระค่าเบี้ยประกัน งวดที่ ${installmentNo}` : `ชำระเต็มจำนวน แพ็กเกจ ${updatedData.package.plan}`
-                    });
                 };
-
-                document.getElementById('successModal').style.display = 'flex';
-            } else {
-                alert(data.message || 'เกิดข้อผิดพลาดในการอัปเดตการชำระเงิน');
-            }
-        } catch (err) {
-            console.error('Payment error:', err);
+            });
         }
     }
+
+    window.receivePayment = function (id, installmentNo, amount) {
+        startCheckout(currentEditData, null, {
+            amountDue: amount,
+            installmentNo,
+            description: `ชำระค่าเบี้ยประกัน งวดที่ ${installmentNo}`
+        });
+    };
+
+    window.receiveAllRemainingPayments = function (id, totalAmount) {
+        startCheckout(currentEditData, null, {
+            amountDue: totalAmount,
+            payAllRemaining: true,
+            description: 'ชำระเงินงวดที่เหลือทั้งหมด'
+        });
+    };
 
     // Listeners for form updates
     document.getElementById('productType').addEventListener('change', toggleIMEIField);
@@ -656,6 +713,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('dobMonth').addEventListener('input', updateAge);
     document.getElementById('dobYear').addEventListener('input', updateAge);
     document.getElementById('package').addEventListener('change', updatePaymentUI);
+    document.getElementById('protectionType').addEventListener('change', updatePaymentUI);
     document.getElementsByName('paymentMethod').forEach(r => r.addEventListener('change', updatePaymentUI));
 
     async function searchMembers(query) {
@@ -906,44 +964,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const url = isEditMode ? `/api/warranties/${document.getElementById('editRecordId').value}` : '/api/warranties';
-            const method = isEditMode ? 'PUT' : 'POST';
+            const reqMethod = isEditMode ? 'PUT' : 'POST';
 
             const res = await fetch(url, {
-                method: method,
+                method: reqMethod,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
             const data = await res.json();
             if (res.ok) {
-                const modalTitle = document.querySelector('#successModal h2');
-                const modalText = document.querySelector('#successModal p');
+                const modalTitle = document.getElementById('successModalTitle');
+                const modalText = document.getElementById('successModalText');
                 const printBtn = document.getElementById('printReceiptBtn');
+                const finishBtn = document.getElementById('finishProcessBtn');
+                const closeBtn = document.getElementById('closeModal');
+                const immediatePayment = document.getElementById('immediatePaymentSection');
 
                 if (isEditMode) {
                     modalTitle.textContent = 'อัปเดตข้อมูลสำเร็จ!';
                     modalText.textContent = 'ข้อมูลประกันภัยได้ถูกอัปเดตลงในระบบเรียบร้อยแล้ว';
+                    hideCheckout();
+                    closeBtn.style.display = 'block';
                 } else {
                     modalTitle.textContent = 'ลงทะเบียนสำเร็จ!';
                     modalText.textContent = 'ข้อมูลการลงทะเบียนประกันภัยของคุณถูกบันทึกเรียบร้อยแล้ว';
 
-                    // If marked as paid, show print button
                     const markPaid = document.getElementById('initialPaidCheck')?.checked;
                     if (markPaid) {
-                        printBtn.style.display = 'block';
-                        printBtn.onclick = () => {
-                            openReceipt({
-                                policyNumber: data.policyNumber,
-                                receiptNo: 'RC-' + data.policyNumber + '-1',
-                                paidDate: new Date().toLocaleString('th-TH'),
-                                shopName: data.shopName,
-                                staffName: currentUser ? currentUser.staffName : (payload.staffName || '-'),
-                                customerName: `${data.customer.firstName} ${data.customer.lastName}`,
-                                customerPhone: data.customer.phone,
-                                customerAddress: data.customer.address,
-                                amount: payload.payment.method === 'Full Payment' ? payload.package.price : payload.payment.schedule[0].amount,
-                                description: payload.payment.method === 'Full Payment' ? `ชำระเต็มจำนวน แพ็กเกจ ${payload.package.plan}` : `ชำระค่าเบี้ยประกัน งวดที่ 1`
-                            });
-                        };
+                        modalText.textContent = 'บันทึกข้อมูลและสถานะการชำระเงินเรียบร้อยแล้ว';
+                        hideCheckout();
+                        document.getElementById('checkoutStep3').style.display = 'block';
+                        setupPrintButton(data, payload);
+                    } else {
+                        startCheckout(data, payload);
                     }
                 }
                 document.getElementById('successModal').style.display = 'flex';
@@ -955,10 +1008,289 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    function setupPrintButton(recordData, payload, extraData = {}) {
+        const printBtn = document.getElementById('printReceiptBtn');
+        const reprintBtn = document.getElementById('reprintReceiptBtn');
+
+        const onPrint = () => {
+            const isInstallment = (payload && payload.payment.method === 'Installment') ||
+                (recordData && recordData.payment.method === 'Installment');
+            const amount = extraData.amount || (payload ? (isInstallment ? payload.payment.schedule[0].amount : payload.package.price) : recordData.package.price);
+
+            const receiptData = {
+                policyNumber: recordData.policyNumber,
+                receiptNo: 'RC-' + recordData.policyNumber + '-' + (checkoutData.payAllRemaining ? 'ALL' : (checkoutData.installmentNo || (isInstallment ? '1' : 'F'))),
+                paidDate: new Date().toLocaleString('th-TH'),
+                shopName: recordData.shopName,
+                staffName: currentUser ? currentUser.staffName : (payload ? payload.staffName : (recordData.staffName || '-')),
+                customerName: `${recordData.customer.firstName} ${recordData.customer.lastName}`,
+                customerPhone: recordData.customer.phone,
+                customerAddress: recordData.customer.address,
+                amount: checkoutData.amountDue || amount,
+                cashReceived: extraData.paidCash || 0,
+                transferAmount: extraData.paidTransfer || 0,
+                change: (extraData.paidCash || 0) + (extraData.paidTransfer || 0) - (checkoutData.amountDue || amount),
+                refId: extraData.refId || '',
+                description: checkoutData.description || (isInstallment ? `ชำระค่าเบี้ยประกัน งวดที่ 1` : `ชำระเต็มจำนวน แพ็กเกจ ${payload.package.plan}`)
+            };
+            openReceipt(receiptData);
+        };
+
+        if (printBtn) printBtn.onclick = onPrint;
+        if (reprintBtn) reprintBtn.onclick = onPrint;
+    }
+
+
+    function hideCheckout() {
+        document.querySelectorAll('.checkout-step').forEach(s => s.style.display = 'none');
+    }
+
+    let checkoutData = { record: null, payload: null, amountDue: 0, method: 'Cash', installmentNo: null, payAllRemaining: false, description: '' };
+
+    function startCheckout(record, payload, extra = null) {
+        checkoutData.record = record;
+        checkoutData.payload = payload;
+
+        if (extra) {
+            checkoutData.amountDue = extra.amountDue;
+            checkoutData.installmentNo = extra.installmentNo || null;
+            checkoutData.payAllRemaining = extra.payAllRemaining || false;
+            checkoutData.description = extra.description || '';
+        } else {
+            checkoutData.amountDue = payload.payment.method === 'Full Payment' ? payload.package.price : payload.payment.schedule[0].amount;
+            checkoutData.installmentNo = payload.payment.method === 'Installment' ? 1 : null;
+            checkoutData.payAllRemaining = false;
+            checkoutData.description = checkoutData.installmentNo ? `ชำระค่าเบี้ยประกัน งวดที่ 1` : `ชำระเต็มจำนวน แพ็กเกจ ${payload.package.plan}`;
+        }
+
+        hideCheckout();
+        document.getElementById('checkoutStep1').style.display = 'block';
+        document.getElementById('successModal').style.display = 'flex';
+        document.getElementById('closeModal').style.display = 'block';
+
+        const modalTitle = document.getElementById('successModalTitle');
+        const modalText = document.getElementById('successModalText');
+
+        if (extra) {
+            modalTitle.textContent = 'ชำระเงินงวดประกัน';
+            modalText.textContent = extra.description;
+        }
+        document.getElementById('checkoutTotalDue').textContent = `${checkoutData.amountDue.toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท`;
+
+        // Reset Inputs
+        document.getElementById('cashReceivedInput').value = '';
+        document.getElementById('transferAmountInput').value = checkoutData.amountDue;
+        document.getElementById('transferRefInput').value = '';
+        document.getElementById('splitCashInput').value = '';
+        document.getElementById('splitTransferInput').value = '';
+
+        updateCheckoutCalculations();
+    }
+
+    // Checkout Tab Switching
+    document.querySelectorAll('.pay-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.pay-tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            checkoutData.method = btn.dataset.method;
+
+            document.getElementById('cashInputGroup').style.display = checkoutData.method === 'Cash' ? 'block' : 'none';
+            document.getElementById('transferInputGroup').style.display = checkoutData.method === 'Transfer' ? 'block' : 'none';
+            document.getElementById('splitInputGroup').style.display = checkoutData.method === 'Split' ? 'block' : 'none';
+
+            updateCheckoutCalculations();
+        });
+    });
+
+    function updateCheckoutCalculations() {
+        const totalDue = checkoutData.amountDue;
+        let totalPaid = 0;
+        let change = 0;
+        let isValid = false;
+
+        if (checkoutData.method === 'Cash') {
+            const received = parseFloat(document.getElementById('cashReceivedInput').value) || 0;
+            change = received - totalDue;
+            totalPaid = received;
+            document.getElementById('cashChangeAmount').textContent = `${(change > 0 ? change : 0).toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท`;
+            isValid = received >= totalDue;
+        } else if (checkoutData.method === 'Transfer') {
+            const amount = parseFloat(document.getElementById('transferAmountInput').value) || 0;
+            totalPaid = amount;
+            isValid = amount >= totalDue;
+        } else if (checkoutData.method === 'Split') {
+            const cash = parseFloat(document.getElementById('splitCashInput').value) || 0;
+            const transfer = parseFloat(document.getElementById('splitTransferInput').value) || 0;
+            totalPaid = cash + transfer;
+            const balance = totalPaid - totalDue;
+
+            document.getElementById('splitTotalPaid').textContent = `${totalPaid.toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท`;
+            document.getElementById('splitBalance').textContent = `${(balance < 0 ? balance : 0).toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท`;
+            document.getElementById('splitBalance').style.color = balance < 0 ? '#ef4444' : '#22c55e';
+
+            const changeElem = document.getElementById('splitChangeAmount');
+            const changeRow = document.getElementById('splitChangeRow');
+            if (balance > 0) {
+                changeRow.style.display = 'flex';
+                changeElem.textContent = `${balance.toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท`;
+            } else {
+                changeRow.style.display = 'none';
+            }
+
+            isValid = totalPaid >= totalDue;
+        }
+
+        document.getElementById('goToSummaryBtn').disabled = !isValid;
+    }
+
+    // Input Listeners
+    ['cashReceivedInput', 'transferAmountInput', 'splitCashInput', 'splitTransferInput'].forEach(id => {
+        document.getElementById(id).addEventListener('input', updateCheckoutCalculations);
+    });
+
+    // Step Navigation
+    document.getElementById('goToSummaryBtn').addEventListener('click', () => {
+        const totalDue = checkoutData.amountDue;
+        let cashPaid = 0;
+        let transferPaid = 0;
+        let change = 0;
+
+        if (checkoutData.method === 'Cash') {
+            cashPaid = parseFloat(document.getElementById('cashReceivedInput').value) || 0;
+            change = cashPaid - totalDue;
+        } else if (checkoutData.method === 'Transfer') {
+            transferPaid = parseFloat(document.getElementById('transferAmountInput').value) || 0;
+        } else if (checkoutData.method === 'Split') {
+            cashPaid = parseFloat(document.getElementById('splitCashInput').value) || 0;
+            transferPaid = parseFloat(document.getElementById('splitTransferInput').value) || 0;
+            change = (cashPaid + transferPaid) - totalDue;
+        }
+
+        document.getElementById('summaryTotalDue').textContent = `${totalDue.toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท`;
+        document.getElementById('summaryCashPaid').textContent = `${cashPaid.toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท`;
+        document.getElementById('summaryTransferPaid').textContent = `${transferPaid.toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท`;
+        document.getElementById('summaryChangeAmount').textContent = `${(change > 0 ? change : 0).toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท`;
+        document.getElementById('summaryChangeRow').style.display = change > 0 ? 'flex' : 'none';
+
+        hideCheckout();
+        document.getElementById('checkoutStep2').style.display = 'block';
+    });
+
+    document.getElementById('backToInputBtn').addEventListener('click', () => {
+        hideCheckout();
+        document.getElementById('checkoutStep1').style.display = 'block';
+    });
+
+    document.getElementById('finalConfirmBtn').addEventListener('click', async () => {
+        const btn = document.getElementById('finalConfirmBtn');
+        const originalText = btn.innerHTML;
+
+        try {
+            btn.disabled = true;
+            btn.innerHTML = '⌛ กำลังยืนยัน...';
+
+            const totalDue = checkoutData.amountDue;
+            let cashPaid = 0;
+            let transferPaid = 0;
+            const refId = document.getElementById('transferRefInput').value;
+
+            if (checkoutData.method === 'Cash') {
+                cashPaid = parseFloat(document.getElementById('cashReceivedInput').value) || 0;
+            } else if (checkoutData.method === 'Transfer') {
+                transferPaid = parseFloat(document.getElementById('transferAmountInput').value) || 0;
+            } else if (checkoutData.method === 'Split') {
+                cashPaid = parseFloat(document.getElementById('splitCashInput').value) || 0;
+                transferPaid = parseFloat(document.getElementById('splitTransferInput').value) || 0;
+            }
+
+            const res = await fetch(`/api/warranties/${checkoutData.record._id}/payment`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    installmentNo: checkoutData.installmentNo,
+                    payAllRemaining: checkoutData.payAllRemaining,
+                    paidCash: cashPaid,
+                    paidTransfer: transferPaid,
+                    refId: refId
+                })
+            });
+
+            if (res.ok) {
+                const totalDue = checkoutData.amountDue;
+                const isInstallment = (checkoutData.payload && checkoutData.payload.payment.method === 'Installment') ||
+                    (checkoutData.record && checkoutData.record.payment.method === 'Installment');
+
+                const receiptData = {
+                    policyNumber: checkoutData.record.policyNumber,
+                    receiptNo: 'RC-' + checkoutData.record.policyNumber + '-' + (checkoutData.payAllRemaining ? 'ALL' : (checkoutData.installmentNo || (isInstallment ? '1' : 'F'))),
+                    paidDate: new Date().toLocaleString('th-TH'),
+                    shopName: checkoutData.record.shopName,
+                    staffName: currentUser ? currentUser.staffName : (checkoutData.payload ? checkoutData.payload.staffName : (checkoutData.record.staffName || '-')),
+                    customerName: `${checkoutData.record.customer.firstName} ${checkoutData.record.customer.lastName}`,
+                    customerPhone: checkoutData.record.customer.phone,
+                    customerAddress: checkoutData.record.customer.address,
+                    amount: totalDue,
+                    cashReceived: cashPaid,
+                    transferAmount: transferPaid,
+                    change: (cashPaid + transferPaid) - totalDue,
+                    refId: refId,
+                    description: checkoutData.description
+                };
+
+                // Refresh UI if in edit mode
+                if (isEditMode) {
+                    const updatedRes = await fetch(`/api/warranties/${checkoutData.record._id}`);
+                    const updatedData = await updatedRes.json();
+                    currentEditData = updatedData;
+                    renderPaymentManagement(updatedData);
+                    fetchWarranties();
+                }
+
+                openReceipt(receiptData);
+                setupPrintButton(checkoutData.record, checkoutData.payload, {
+                    paidCash: cashPaid,
+                    paidTransfer: transferPaid,
+                    refId: refId
+                });
+                hideCheckout();
+                document.getElementById('checkoutStep3').style.display = 'block';
+            } else {
+                const data = await res.json();
+                alert(data.message || 'เกิดข้อผิดพลาดในการบันทึกการชำระเงิน');
+            }
+        } catch (err) {
+            console.error('Final confirm error:', err);
+            alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    });
+
+    document.getElementById('finishProcessBtn').addEventListener('click', () => {
+        document.getElementById('successModal').style.display = 'none';
+        resetRegistrationModal();
+        showView('dashboard');
+        fetchWarranties();
+    });
+
+    function resetRegistrationModal() {
+        hideCheckout();
+        document.getElementById('closeModal').style.display = 'block';
+        // Reset tabs
+        document.querySelectorAll('.pay-tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector('.pay-tab-btn[data-method="Cash"]').classList.add('active');
+        checkoutData.method = 'Cash';
+        document.getElementById('cashInputGroup').style.display = 'block';
+        document.getElementById('transferInputGroup').style.display = 'none';
+        document.getElementById('splitInputGroup').style.display = 'none';
+    }
+
     document.getElementById('closeModal').addEventListener('click', () => {
         document.getElementById('successModal').style.display = 'none';
-        document.getElementById('printReceiptBtn').style.display = 'none'; // Reset button
+        resetRegistrationModal();
         showView('dashboard');
+        fetchWarranties();
     });
 
     // Dashboard Filters listeners
@@ -999,6 +1331,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         <button class="edit-member-btn edit-btn" data-id="${m._id}" title="แก้ไข">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                         </button>
+                        <button class="delete-member-btn edit-btn" data-id="${m._id}" title="ลบ" style="color: #ef4444;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                        </button>
                     </div>
                 </td>
             </tr>
@@ -1011,6 +1346,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 editMember(id);
             });
         });
+
+        // Add event listeners for delete buttons
+        body.querySelectorAll('.delete-member-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-id');
+                deleteMember(id);
+            });
+        });
+    }
+
+    async function deleteMember(id) {
+        if (!confirm('⚠️ คำเตือน: คุณต้องการลบสมาชิกนี้ใช่หรือไม่? บัญชีและประวัติจะถูกลบออกถาวร')) return;
+
+        try {
+            const res = await fetch(`/api/members/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                alert('ลบคลิกสำเร็จ');
+                fetchMembers();
+            } else {
+                const data = await res.json();
+                alert(data.message || 'เกิดข้อผิดพลาดในการลบสมาชิก');
+            }
+        } catch (err) {
+            console.error('Delete member error:', err);
+        }
     }
 
     async function editMember(id) {
@@ -1197,6 +1557,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         <button class="edit-shop-btn edit-btn" data-id="${s._id}" title="แก้ไข">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                         </button>
+                        <button class="delete-shop-btn edit-btn" data-id="${s._id}" title="ลบ" style="color: #ef4444;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                        </button>
                     </div>
                 </td>
             </tr>
@@ -1206,6 +1569,28 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.edit-shop-btn').forEach(btn => {
             btn.addEventListener('click', () => editShop(btn.dataset.id));
         });
+
+        // Add event listeners for delete buttons
+        document.querySelectorAll('.delete-shop-btn').forEach(btn => {
+            btn.addEventListener('click', () => deleteShop(btn.dataset.id));
+        });
+    }
+
+    async function deleteShop(id) {
+        if (!confirm('⚠️ คำเตือน: คุณต้องการลบร้านค้านี้ใช่หรือไม่?')) return;
+
+        try {
+            const res = await fetch(`/api/shops/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                alert('ลบร้านค้าสำเร็จ');
+                fetchShops();
+            } else {
+                const data = await res.json();
+                alert(data.message || 'เกิดข้อผิดพลาดในการลบร้านค้า');
+            }
+        } catch (err) {
+            console.error('Delete shop error:', err);
+        }
     }
 
     const shopModal = document.getElementById('shopModal');

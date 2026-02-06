@@ -186,14 +186,17 @@
 <body>
 
     <div class="controls">
-        <label>
-            <input type="radio" name="docType" value="receipt" checked onchange="updateDocType()">
-            ใบเสร็จรับเงิน (Receipt)
-        </label>
-        <label>
-            <input type="radio" name="docType" value="tax_invoice" onchange="updateDocType()">
-            ใบกำกับภาษี (Tax Invoice)
-        </label>
+        <div style="font-weight: 600; color: #0d9488; display: flex; align-items: center; gap: 8px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+            บังคับออกเอกสาร: ใบกำกับภาษี (Tax Invoice)
+        </div>
         <button class="btn-print" onclick="window.print()">พิมพ์ (Print)</button>
     </div>
 
@@ -206,7 +209,7 @@
             <p>เลขประจำตัวผู้เสียภาษี: 0000000000000</p>
         </div>
 
-        <div class="doc-title" id="displayDocTitle">ใบเสร็จรับเงิน / RECEIPT</div>
+        <div class="doc-title" id="displayDocTitle">ใบกำกับภาษี / TAX INVOICE</div>
 
         <div class="info-block">
             <div class="info-row">
@@ -275,6 +278,21 @@
                 <span>ยอดชำระสุทธิ (Total Amount):</span>
                 <span id="displayTotal">0.00</span>
             </div>
+            <div id="paymentBreakdown"
+                style="margin-top: 5px; padding-top: 5px; border-top: 1px dashed #000; font-size: 10px;">
+                <div class="total-row" id="receiptCashRow" style="display: none;">
+                    <span>รับเงินสด (Cash):</span>
+                    <span id="displayCashReceived">0.00</span>
+                </div>
+                <div class="total-row" id="receiptTransferRow" style="display: none;">
+                    <span>เงินโอน (Transfer):</span>
+                    <span id="displayTransferAmount">0.00</span>
+                </div>
+                <div class="total-row" id="receiptChangeRow" style="display: none; font-weight: 600;">
+                    <span>เงินทอน (Change):</span>
+                    <span id="displayChange">0.00</span>
+                </div>
+            </div>
         </div>
 
         <div class="signatures">
@@ -332,29 +350,37 @@
                 </tr>
             `;
 
+            // Payment Breakdown
+            if (receiptData.cashReceived > 0) {
+                document.getElementById('receiptCashRow').style.display = 'flex';
+                document.getElementById('displayCashReceived').textContent = receiptData.cashReceived.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+            if (receiptData.transferAmount > 0) {
+                document.getElementById('receiptTransferRow').style.display = 'flex';
+                document.getElementById('displayTransferAmount').textContent = receiptData.transferAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+            if (receiptData.change > 0) {
+                document.getElementById('receiptChangeRow').style.display = 'flex';
+                document.getElementById('displayChange').textContent = receiptData.change.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+
             updateDocType();
         }
 
         function updateDocType() {
-            const docType = document.querySelector('input[name="docType"]:checked').value;
             const vatSection = document.getElementById('vatSection');
             const displayDocTitle = document.getElementById('displayDocTitle');
 
             const total = receiptData.amount;
 
-            if (docType === 'tax_invoice') {
-                displayDocTitle.textContent = 'ใบกำกับภาษี / TAX INVOICE';
-                vatSection.style.display = 'block';
+            displayDocTitle.textContent = 'ใบกำกับภาษี / TAX INVOICE';
+            vatSection.style.display = 'block';
 
-                const preVat = total / 1.07;
-                const vatAmt = total - preVat;
+            const preVat = total / 1.07;
+            const vatAmt = total - preVat;
 
-                document.getElementById('displayPreVat').textContent = preVat.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                document.getElementById('displayVatAmt').textContent = vatAmt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            } else {
-                displayDocTitle.textContent = 'ใบเสร็จรับเงิน / RECEIPT';
-                vatSection.style.display = 'none';
-            }
+            document.getElementById('displayPreVat').textContent = preVat.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('displayVatAmt').textContent = vatAmt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
             document.getElementById('displayTotal').textContent = total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }

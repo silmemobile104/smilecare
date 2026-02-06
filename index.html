@@ -634,6 +634,13 @@
                     </div>
                     <div class="grid-row">
                         <div class="form-group">
+                            <label>ประเภทการคุ้มครอง (Protection Type)</label>
+                            <select id="protectionType" required>
+                                <option value="Full">คุ้มครองทั้งเครื่อง (Full Device)</option>
+                                <option value="Screen">คุ้มครองเฉพาะหน้าจอ (Screen Only)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
                             <label>แพ็กเกจ (Package)</label>
                             <select id="package" required>
                                 <option value="" disabled selected>เลือกแผนประกัน</option>
@@ -680,9 +687,6 @@
                     <div id="initialPaymentCheck" class="form-group" style="margin-top: 1rem;">
                         <label class="radio-label"
                             style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                            <input type="checkbox" id="initialPaidCheck" style="width: 20px; height: 20px;">
-                            <span style="font-weight: 500; font-size: 0.95rem;">ทำเครื่องหมายเป็นชำระแล้ว
-                                (งวดแรกหรือทั้งหมด)</span>
                         </label>
                     </div>
 
@@ -706,6 +710,24 @@
                 <section id="paymentManagementSection" class="payment-status-section" style="display: none;">
                     <div class="section-header"><span class="step-number">04</span>
                         <h2>จัดการการชำระเงิน</h2>
+                    </div>
+
+                    <!-- Debt Summary -->
+                    <div class="debt-summary-container"
+                        style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                        <div class="payment-info-card"
+                            style="background: #f8fafc; border-left: 4px solid var(--text-muted);">
+                            <div>
+                                <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">ยอดหนี้ทั้งหมด</p>
+                                <h3 id="debtSummaryTotal" style="margin: 5px 0 0 0; color: var(--text-main);">0 บาท</h3>
+                            </div>
+                        </div>
+                        <div class="payment-info-card" style="background: #fff7ed; border-left: 4px solid #f97316;">
+                            <div>
+                                <p style="color: #9a3412; font-size: 0.85rem; margin: 0;">ยอดหนี้คงเหลือ</p>
+                                <h3 id="debtSummaryRemaining" style="margin: 5px 0 0 0; color: #c2410c;">0 บาท</h3>
+                            </div>
+                        </div>
                     </div>
                     <div id="fullPaymentStatus" style="display: none;">
                         <div class="payment-info-card">
@@ -734,6 +756,10 @@
                             </thead>
                             <tbody id="paymentStatusBody"></tbody>
                         </table>
+                        <div id="payAllRemainingContainer" style="display: none; margin-top: 1rem; text-align: right;">
+                            <button type="button" id="payAllRemainingBtn" class="receive-btn"
+                                style="background: var(--primary);">💰 ชำระเงินงวดที่เหลือทั้งหมด</button>
+                        </div>
                     </div>
                 </section>
 
@@ -752,11 +778,135 @@
     <div id="successModal" class="modal">
         <div class="modal-content">
             <div class="success-icon">✓</div>
-            <h2>บันทึกข้อมูลสำเร็จ!</h2>
-            <p>ข้อมูลประกันภัยของคุณถูกบันทึกลงในระบบเรียบร้อยแล้ว</p>
+            <h2 id="successModalTitle">บันทึกข้อมูลสำเร็จ!</h2>
+            <p id="successModalText">ข้อมูลประกันภัยของคุณถูกบันทึกลงในระบบเรียบร้อยแล้ว</p>
+
+            <!-- Advanced Checkout Section (Step 1: Payment Selection) -->
+            <div id="checkoutStep1" class="checkout-step" style="display: none; margin: 1.5rem 0; text-align: left;">
+                <div
+                    style="background: #f1f5f9; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: 600; color: var(--text-main);">ยอดที่ต้องชำระ:</span>
+                    <span id="checkoutTotalDue" style="font-size: 1.5rem; font-weight: 700; color: var(--primary);">0.00
+                        บาท</span>
+                </div>
+
+                <div class="payment-tabs" style="display: flex; gap: 5px; margin-bottom: 1rem;">
+                    <button type="button" class="pay-tab-btn active" data-method="Cash"
+                        style="flex: 1; padding: 0.8rem; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; cursor: pointer; transition: all 0.2s;">💵
+                        เงินสด</button>
+                    <button type="button" class="pay-tab-btn" data-method="Transfer"
+                        style="flex: 1; padding: 0.8rem; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; cursor: pointer; transition: all 0.2s;">📱
+                        โอนเงิน</button>
+                    <button type="button" class="pay-tab-btn" data-method="Split"
+                        style="flex: 1; padding: 0.8rem; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; cursor: pointer; transition: all 0.2s;">⚖️
+                        แบ่งจ่าย</button>
+                </div>
+
+                <div id="cashInputGroup" class="payment-group">
+                    <label style="display: block; margin-bottom: 5px; font-size: 0.9rem;">รับเงินสดมา (บาท)</label>
+                    <input type="number" id="cashReceivedInput" placeholder="0.00" class="full-width"
+                        style="font-size: 1.2rem; padding: 0.8rem; border-radius: 8px; border: 1px solid #cbd5e1;">
+                    <div style="margin-top: 10px; display: flex; justify-content: space-between; font-weight: 600;">
+                        <span>เงินทอน:</span>
+                        <span id="cashChangeAmount" style="color: #ef4444; font-size: 1.2rem;">0.00 บาท</span>
+                    </div>
+                </div>
+
+                <div id="transferInputGroup" class="payment-group" style="display: none;">
+                    <label style="display: block; margin-bottom: 5px; font-size: 0.9rem;">ยอดโอน (บาท)</label>
+                    <input type="number" id="transferAmountInput" placeholder="0.00" class="full-width"
+                        style="font-size: 1.2rem; padding: 0.8rem; border-radius: 8px; border: 1px solid #cbd5e1;">
+                    <label
+                        style="display: block; margin-top: 10px; margin-bottom: 5px; font-size: 0.9rem;">เลขที่อ้างอิง /
+                        Slip ID (ถ้ามี)</label>
+                    <input type="text" id="transferRefInput" placeholder="Ref ID..." class="full-width"
+                        style="padding: 0.8rem; border-radius: 8px; border: 1px solid #cbd5e1;">
+                </div>
+
+                <div id="splitInputGroup" class="payment-group" style="display: none;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-size: 0.9rem;">ส่วนเงินสด
+                                (บาท)</label>
+                            <input type="number" id="splitCashInput" placeholder="0.00" class="full-width"
+                                style="padding: 0.8rem; border-radius: 8px; border: 1px solid #cbd5e1;">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-size: 0.9rem;">ส่วนโอน (บาท)</label>
+                            <input type="number" id="splitTransferInput" placeholder="0.00" class="full-width"
+                                style="padding: 0.8rem; border-radius: 8px; border: 1px solid #cbd5e1;">
+                        </div>
+                    </div>
+                    <div
+                        style="margin-top: 10px; padding: 0.8rem; background: #fffbeb; border-radius: 8px; border: 1px solid #fde68a;">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+                            <span>รวมจ่าย:</span>
+                            <span id="splitTotalPaid" style="font-weight: 600;">0.00 บาท</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-top: 5px; font-size: 0.9rem;">
+                            <span>ส่วนต่าง:</span>
+                            <span id="splitBalance" style="font-weight: 600; color: #ef4444;">-0.00 บาท</span>
+                        </div>
+                        <div id="splitChangeRow"
+                            style="display: none; justify-content: space-between; margin-top: 5px; font-size: 0.9rem; font-weight: 600;">
+                            <span>เงินทอน:</span>
+                            <span id="splitChangeAmount" style="color: #ef4444;">0.00 บาท</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="goToSummaryBtn" class="submit-btn full-width" style="margin-top: 1.5rem;"
+                    disabled>ตรวจสอบข้อมูลสรุป</button>
+            </div>
+
+            <!-- Step 2: Summary Section -->
+            <div id="checkoutStep2" class="checkout-step" style="display: none; margin: 1.5rem 0; text-align: left;">
+                <h3
+                    style="margin-bottom: 1rem; color: var(--text-main); font-size: 1.1rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem;">
+                    📃 สรุปรายการชำระเงิน</h3>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>ราคาแพ็กเกจ:</span>
+                        <span id="summaryTotalDue" style="font-weight: 600;">0.00 บาท</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>ชำระด้วยเงินสด:</span>
+                        <span id="summaryCashPaid">0.00 บาท</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>ชำระด้วยการโอน:</span>
+                        <span id="summaryTransferPaid">0.00 บาท</span>
+                    </div>
+                    <div id="summaryChangeRow"
+                        style="display: flex; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #cbd5e1;">
+                        <span style="font-weight: 700;">เงินทอน (Cash Change):</span>
+                        <span id="summaryChangeAmount" style="color: #ef4444; font-weight: 800; font-size: 1.2rem;">0.00
+                            บาท</span>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 1.5rem;">
+                    <button id="backToInputBtn" style="flex: 1; background: #64748b;">ย้อนกลับ</button>
+                    <button id="finalConfirmBtn" class="submit-btn" style="flex: 2; margin: 0;">ยืนยันจ่าย &
+                        พิมพ์ใบเสร็จ</button>
+                </div>
+            </div>
+
+            <!-- Step 3: Transaction Complete -->
+            <div id="checkoutStep3" class="checkout-step"
+                style="display: none; margin: 1.5rem 0; padding: 1rem; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; text-align: center;">
+                <div style="font-size: 3rem; margin-bottom: 0.5rem;">🎉</div>
+                <h3 style="color: #166534; margin-bottom: 0.5rem;">การทำรายการเสร็จสมบูรณ์</h3>
+                <p style="color: #15803d; font-size: 0.9rem;">ระบบได้บันทึกการชำระเงินและเปิดใบเสร็จให้คุณแล้ว</p>
+                <div style="display: flex; gap: 10px; margin-top: 1.5rem;">
+                    <button id="reprintReceiptBtn" class="receive-btn" style="flex: 1; margin: 0;">🖨️
+                        พิมพ์ใบเสร็จอีกครั้ง</button>
+                    <button id="finishProcessBtn" class="submit-btn" style="flex: 1; margin: 0; background: #22c55e;">✅
+                        กลับสู่หน้าหลัก</button>
+                </div>
+            </div>
+
             <div style="display: flex; gap: 10px; justify-content: center; margin-top: 1rem;">
-                <button id="closeModal" style="margin: 0;">กลับสู่หน้าหลัก</button>
-                <button id="printReceiptBtn" class="receive-btn" style="display: none;">พิมพ์ใบเสร็จ</button>
+                <button id="closeModal" style="margin: 0; flex: 1;">ยกเลิก</button>
             </div>
         </div>
     </div>
