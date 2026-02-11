@@ -262,7 +262,7 @@
             <!-- Header -->
             <div class="header">
                 <div class="logo-section">
-                    <img src="logo_smilecare.png" alt="Silmin Mobile Logo" style="height: 20px; object-fit: contain;">
+                    <img src="logo_easycare.png" alt="Silmin Mobile Logo" style="height: 20px; object-fit: contain;">
                 </div>
                 <div class="company-name">
                     <h1>สมายล์แคร์</h1>
@@ -287,8 +287,7 @@
                     </div>
                     <div class="col w-60">
                         <span class="label" style="font-weight: bold;">สัญญาตะกาฟุลอุบัติเหตุสำหรับโทรศัพท์มือถือ</span>
-                        <span class="label">กธ.</span>
-                        <span id="doc_policyNumber" style="width: 120px; font-weight: bold; font-size: 25px;"></span>
+                        <span class="label">กธ.<span id="doc_policyNumber" style="width: 120px; font-weight: bold; font-size: 25px;"></span></span>
                     </div>
                 </div>
 
@@ -311,8 +310,7 @@
                         </div>
                         <div class="field" style="align-items: flex-start;">
                             <span class="label">ที่อยู่</span>
-                            <div id="doc_address"
-                                style="width: 300px;"></span>
+                            <div id="doc_address" style="width: 300px;"></span>
                             </div>
                         </div>
                     </div>
@@ -439,7 +437,7 @@
                         <table class="installment-table">
                             <tr>
                                 <td rowspan="4" style="width: 15%; vertical-align: top;">5.2 ชำระแบ่งจ่าย 3 งวด</td>
-                                
+
                                 <td style="width: 10%; text-align: center;">งวด</td>
                                 <td style="width: 16%; text-align: center;">กำหนดจ่าย</td>
                                 <td style="width: 16%; text-align: center;">สถานะ</td>
@@ -451,25 +449,31 @@
                                 <td>งวดที่ 1</td>
                                 <td style="text-align: center;"><span id="doc_due_1">-</span></td>
                                 <td style="text-align: center;"><span id="doc_status_1">-</span></td>
-                                <td style="text-align: right;"><span id="doc_amt_1">-</span><span style="width: 5%; border-left: none;">บาท</span></td>
+                                <td style="text-align: right;"><span id="doc_amt_1">-</span><span
+                                        style="width: 5%; border-left: none;">บาท</span></td>
                                 <td style="text-align: center;">10%</td>
-                                <td style="text-align: right;"><span id="doc_limit_1">-</span><span style="width: 5%; border-left: none;">บาท</span></td>
+                                <td style="text-align: right;"><span id="doc_limit_1">-</span><span
+                                        style="width: 5%; border-left: none;">บาท</span></td>
                             </tr>
                             <tr>
                                 <td>งวดที่ 2</td>
                                 <td style="text-align: center;"><span id="doc_due_2">-</span></td>
                                 <td style="text-align: center;"><span id="doc_status_2">-</span></td>
-                                <td style="text-align: right;"><span id="doc_amt_2">-</span><span style="width: 5%; border-left: none;">บาท</span></td>
+                                <td style="text-align: right;"><span id="doc_amt_2">-</span><span
+                                        style="width: 5%; border-left: none;">บาท</span></td>
                                 <td style="text-align: center;">30%</td>
-                                <td style="text-align: right;"><span id="doc_limit_2">-</span><span style="width: 5%; border-left: none;">บาท</span></td>
+                                <td style="text-align: right;"><span id="doc_limit_2">-</span><span
+                                        style="width: 5%; border-left: none;">บาท</span></td>
                             </tr>
                             <tr>
                                 <td>งวดที่ 3</td>
                                 <td style="text-align: center;"><span id="doc_due_3">-</span></td>
                                 <td style="text-align: center;"><span id="doc_status_3">-</span></td>
-                                <td style="text-align: right;"><span id="doc_amt_3">-</span><span style="width: 5%; border-left: none;">บาท</span></td>
+                                <td style="text-align: right;"><span id="doc_amt_3">-</span><span
+                                        style="width: 5%; border-left: none;">บาท</span></td>
                                 <td style="text-align: center;">100%</td>
-                                <td style="text-align: right;"><span id="doc_limit_3">-</span><span style="width: 5%; border-left: none;">บาท</span></td>
+                                <td style="text-align: right;"><span id="doc_limit_3">-</span><span
+                                        style="width: 5%; border-left: none;">บาท</span></td>
                             </tr>
                         </table>
                         <div class="payment-note" style="padding: 5px 10px;">
@@ -679,22 +683,23 @@
 
                 // Section 4 & 6 Package details
                 const deviceValue = data.device.deviceValue || 0;
+                const coverageValue = Math.floor(deviceValue * 0.7); // 70% of device value
                 const packagePrice = data.package.price || 0;
                 document.getElementById('doc_packagePlan').textContent = data.package.plan;
                 document.getElementById('doc_packagePriceDisplay').textContent = `(${packagePrice.toLocaleString()}บาท)`;
-                document.getElementById('doc_packagePrice').textContent = deviceValue.toLocaleString();
+                document.getElementById('doc_packagePrice').textContent = coverageValue.toLocaleString();
                 document.getElementById('doc_packagePlan_sec6').textContent = data.package.plan;
                 document.getElementById('doc_packagePrice_sec6').textContent = packagePrice.toLocaleString();
-                document.getElementById('doc_deviceValue_sec6').textContent = deviceValue.toLocaleString();
+                document.getElementById('doc_deviceValue_sec6').textContent = coverageValue.toLocaleString();
 
                 // Payment Method & Coverage logic
                 if (data.payment.method === 'Installment') {
                     document.getElementById('sec_5_2').style.display = 'flex';
                     document.getElementById('sec_5_1').style.display = 'none';
 
-                    document.getElementById('doc_limit_1').textContent = Math.floor(deviceValue * 0.1).toLocaleString();
-                    document.getElementById('doc_limit_2').textContent = Math.floor(deviceValue * 0.3).toLocaleString();
-                    document.getElementById('doc_limit_3').textContent = deviceValue.toLocaleString();
+                    document.getElementById('doc_limit_1').textContent = Math.floor(coverageValue * 0.1).toLocaleString();
+                    document.getElementById('doc_limit_2').textContent = Math.floor(coverageValue * 0.3).toLocaleString();
+                    document.getElementById('doc_limit_3').textContent = coverageValue.toLocaleString();
 
                     // Fill Installment Amounts
                     data.payment.schedule.forEach(s => {
@@ -720,7 +725,7 @@
                     document.getElementById('sec_5_1').style.display = 'flex';
                     document.getElementById('sec_5_2').style.display = 'none';
                     document.getElementById('doc_fullPrice').textContent = packagePrice.toLocaleString();
-                    document.getElementById('doc_coverageAmount').textContent = deviceValue.toLocaleString();
+                    document.getElementById('doc_coverageAmount').textContent = coverageValue.toLocaleString();
                 }
 
                 // Signatures

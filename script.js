@@ -145,7 +145,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let isEditMode = false;
     let currentEditData = null;
     let allRecords = []; // Global state for filtering
-    const PACKAGE_PRICES = { 'Plan A': 799, 'Plan B': 1499, 'Plan C': 1699, 'Plan D': 2399, 'Plan a': 599, 'Plan b': 999, 'Plan c': 1299 };
+    const PACKAGE_PRICES = {
+        'Plan A': 799, 'Plan B': 1499, 'Plan C': 1699, 'Plan D': 2399,
+        'Plan a': 599, 'Plan b': 999, 'Plan c': 1299,
+        'Plan 1': 399, 'Plan 2': 799, 'Plan 3': 1099
+    };
     const formatDate = (dateStr) => dateStr ? new Date(dateStr).toISOString().split('T')[0] : '';
 
     // --- DOM ELEMENTS ---
@@ -426,7 +430,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td data-label="สถานะ">${statusBadge}</td>
                     <td data-label="การชำระเงิน">${paymentStatus}</td>
                     <td data-label="จัดการ">
-                    <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                    <div style="display: flex; gap: 0.5rem; justify-content: center;">
                         <button class="edit-btn" data-id="${r._id}" title="แก้ไขข้อมูล">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                         </button>
@@ -533,11 +537,18 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('deviceValue').value = data.device.deviceValue || '';
             document.getElementById('officialWarrantyEnd').value = formatDate(data.device.officialWarrantyEnd);
 
-            // Set Protection Type based on Plan name case (Plan A/B/C/D vs Plan a/b/c)
-            const isScreenOnly = ['Plan a', 'Plan b', 'Plan c'].includes(data.package.plan);
-            document.getElementById('protectionType').value = isScreenOnly ? 'Screen' : 'Full';
+            // Set Protection Type based on Plan name
+            const planName = data.package.plan;
+            if (['Plan A', 'Plan B', 'Plan C', 'Plan D'].includes(planName)) {
+                document.getElementById('protectionType').value = 'Full';
+            } else if (['Plan a', 'Plan b', 'Plan c'].includes(planName)) {
+                document.getElementById('protectionType').value = 'ScreenApple';
+            } else if (['Plan 1', 'Plan 2', 'Plan 3'].includes(planName)) {
+                document.getElementById('protectionType').value = 'ScreenCompany';
+            }
+
             updatePackageOptions();
-            document.getElementById('package').value = data.package.plan;
+            document.getElementById('package').value = planName;
 
             document.getElementById('startDate').value = data.warrantyDates.start;
             document.getElementById('endDate').value = data.warrantyDates.end;
@@ -580,12 +591,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 <option value="Plan C">Plan C</option>
                 <option value="Plan D">Plan D</option>
             `;
-        } else {
+        } else if (type === 'ScreenApple') {
             options = `
                 <option value="" disabled>เลือกแผนประกัน</option>
                 <option value="Plan a">Plan a</option>
                 <option value="Plan b">Plan b</option>
                 <option value="Plan c">Plan c</option>
+            `;
+        } else if (type === 'ScreenCompany') {
+            options = `
+                <option value="" disabled>เลือกแผนประกัน</option>
+                <option value="Plan 1">Plan 1</option>
+                <option value="Plan 2">Plan 2</option>
+                <option value="Plan 3">Plan 3</option>
             `;
         }
 
@@ -645,7 +663,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch('/api/shops');
             const shops = await res.json();
 
-            shopSelect.innerHTML = '<option value="" disabled selected>เลือกสรรร้านค้า</option>';
+            shopSelect.innerHTML = '<option value="" disabled selected>เลือกร้านค้า</option>';
             shops.forEach(shop => {
                 const option = document.createElement('option');
                 option.value = shop.shopName;
@@ -1498,7 +1516,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td data-label="เบอร์โทรศัพท์">${m.phone}</td>
                 <td data-label="ที่อยู่ตามบัตร">${m.idCardAddress || '-'}</td>
                 <td data-label="จัดการ">
-                    <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                    <div style="display: flex; gap: 0.5rem; justify-content: center;">
                         <button class="edit-member-btn edit-btn" data-id="${m._id}" title="แก้ไข">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                         </button>
@@ -1725,7 +1743,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td data-label="ชื่อร้านค้า">${s.shopName}</td>
                 <td data-label="สถานที่ตั้ง">${s.location || '-'}</td>
                 <td data-label="จัดการ">
-                    <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                    <div style="display: flex; gap: 0.5rem; justify-content: center;">
                         <button class="edit-shop-btn edit-btn" data-id="${s._id}" title="แก้ไข">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                         </button>
@@ -1828,6 +1846,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (shop) {
                 isEditMode = true;
+                const editIdElem = document.getElementById('editShopId');
+                const titleElem = document.getElementById('shopModalTitle');
+                const idDisplayElem = document.getElementById('shopIdDisplay');
                 const modalNameElem = document.getElementById('shopModalName');
                 const locElem = document.getElementById('shopLocation');
 

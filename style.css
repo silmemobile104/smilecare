@@ -777,8 +777,6 @@ textarea:focus {
     margin-bottom: 2.5rem;
     margin-left: 0.75rem;
     object-fit: contain;
-    filter: brightness(0) invert(1);
-    opacity: 0.95;
 }
 
 .sidebar nav {
@@ -1125,7 +1123,7 @@ table {
 th {
     background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
     padding: 1rem 1.25rem;
-    text-align: left;
+    text-align: center;
     font-family: var(--thai-font-title);
     font-size: 0.8rem;
     font-weight: 700;
@@ -1144,6 +1142,7 @@ td {
     font-size: 0.9rem;
     border-bottom: 1px solid var(--border-light);
     color: var(--text-main);
+    text-align: center;
     white-space: nowrap;
     vertical-align: middle;
 }
