@@ -29,6 +29,7 @@ const WarrantySchema = new mongoose.Schema({
     policyNumber: { type: String, unique: true, index: true },
     memberId: { type: String, index: true },
     shopName: String,
+    protectionType: String,
     staffName: String,
     customer: {
         firstName: String,
@@ -74,6 +75,11 @@ const WarrantySchema = new mongoose.Schema({
             paidTransfer: Number,
             refId: String
         }]
+    },
+    approvalStatus: {
+        type: String,
+        enum: ['pending', 'approved', 'rejected'],
+        default: 'pending'
     }
 }, { timestamps: true });
 
@@ -171,10 +177,27 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// Get all warranties
+// Get all warranties (Enriched with Member Data)
 app.get('/api/warranties', async (req, res) => {
     try {
-        const warranties = await Warranty.find().sort({ createdAt: -1 });
+        const warranties = await Warranty.aggregate([
+            { $sort: { createdAt: -1 } },
+            {
+                $lookup: {
+                    from: 'members',
+                    localField: 'memberId',
+                    foreignField: 'memberId',
+                    as: 'memberInfo'
+                }
+            },
+            {
+                $addFields: {
+                    'customer.citizenId': { $arrayElemAt: ['$memberInfo.citizenId', 0] },
+                    'customer.id': '$memberId'
+                }
+            },
+            { $project: { memberInfo: 0 } }
+        ]);
         res.json(warranties);
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -200,10 +223,75 @@ app.post('/api/warranties', async (req, res) => {
 
         const newWarranty = new Warranty({
             ...req.body,
-            policyNumber
+            policyNumber,
+            approvalStatus: 'pending'
         });
         await newWarranty.save();
         res.status(201).json(newWarranty);
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+});
+
+// Get warranties filtered by approvalStatus (Enriched with Member Data)
+app.get('/api/warranties/pending', async (req, res) => {
+    try {
+        const status = req.query.status || 'pending';
+        const matchQuery = {};
+        if (status !== 'all') {
+            matchQuery.approvalStatus = status;
+        }
+
+        const warranties = await Warranty.aggregate([
+            { $match: matchQuery },
+            { $sort: { createdAt: -1 } },
+            {
+                $lookup: {
+                    from: 'members',
+                    localField: 'memberId',
+                    foreignField: 'memberId',
+                    as: 'memberInfo'
+                }
+            },
+            {
+                $addFields: {
+                    'customer.citizenId': { $arrayElemAt: ['$memberInfo.citizenId', 0] },
+                    'customer.id': '$memberId'
+                }
+            },
+            { $project: { memberInfo: 0 } }
+        ]);
+        res.json(warranties);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Approve a warranty
+app.put('/api/warranties/:id/approve', async (req, res) => {
+    try {
+        const warranty = await Warranty.findByIdAndUpdate(
+            req.params.id,
+            { approvalStatus: 'approved' },
+            { new: true }
+        );
+        if (!warranty) return res.status(404).json({ message: 'Record not found' });
+        res.json({ success: true, warranty });
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+});
+
+// Reject a warranty
+app.put('/api/warranties/:id/reject', async (req, res) => {
+    try {
+        const warranty = await Warranty.findByIdAndUpdate(
+            req.params.id,
+            { approvalStatus: 'rejected' },
+            { new: true }
+        );
+        if (!warranty) return res.status(404).json({ message: 'Record not found' });
+        res.json({ success: true, warranty });
     } catch (err) {
         res.status(400).json({ message: err.message });
     }
@@ -236,12 +324,32 @@ app.get('/api/warranties/check-duplicate', async (req, res) => {
     }
 });
 
-// Get single warranty
+// Get single warranty (Enriched with Member Data)
 app.get('/api/warranties/:id', async (req, res) => {
     try {
-        const warranty = await Warranty.findById(req.params.id);
-        if (!warranty) return res.status(404).json({ message: 'Record not found' });
-        res.json(warranty);
+        const warranties = await Warranty.aggregate([
+            { $match: { _id: new mongoose.Types.ObjectId(req.params.id) } },
+            {
+                $lookup: {
+                    from: 'members',
+                    localField: 'memberId',
+                    foreignField: 'memberId',
+                    as: 'memberInfo'
+                }
+            },
+            {
+                $addFields: {
+                    'customer.citizenId': { $arrayElemAt: ['$memberInfo.citizenId', 0] },
+                    'customer.id': '$memberId'
+                }
+            },
+            { $project: { memberInfo: 0 } }
+        ]);
+
+        if (!warranties || warranties.length === 0) {
+            return res.status(404).json({ message: 'Record not found' });
+        }
+        res.json(warranties[0]);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }

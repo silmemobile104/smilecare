@@ -414,7 +414,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 timeRemainingText = 'หมดอายุ';
             }
 
-            const statusBadge = `<span class="status-badge ${isExpired ? 'status-expired' : 'status-active'}">${isExpired ? 'หมดอายุ' : 'ปกติ'}</span>`;
+            let statusBadge = '';
+            if (r.approvalStatus === 'pending') {
+                statusBadge = `<span class="status-badge status-pending">รออนุมัติ</span>`;
+            } else if (r.approvalStatus === 'rejected') {
+                statusBadge = `<span class="status-badge status-expired">ไม่อนุมัติ</span>`;
+            } else {
+                const isExpired = new Date(r.warrantyDates.end) < new Date();
+                statusBadge = `<span class="status-badge ${isExpired ? 'status-expired' : 'status-active'}">${isExpired ? 'หมดอายุ' : 'ปกติ'}</span>`;
+            }
 
             return `
                 <tr>
@@ -880,7 +888,53 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    window.receivePayment = function (id, installmentNo, amount) {
+    // --- APPROVAL GUARD FOR PAYMENTS ---
+    async function waitForApprovalIfPending(warrantyId) {
+        return new Promise((resolve) => {
+            Swal.fire({
+                title: 'กรุณารออนุมัติสัญญา...',
+                html: '<p style="color: #64748b; font-size: 0.9rem;">ระบบกำลังรอการอนุมัติจากหัวหน้างาน<br>กรุณาอย่าปิดหน้านี้</p>',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                    const pollInterval = setInterval(async () => {
+                        try {
+                            const res = await fetch(`/api/warranties/${warrantyId}`);
+                            const data = await res.json();
+                            if (data.approvalStatus === 'approved') {
+                                clearInterval(pollInterval);
+                                Swal.close();
+                                resolve('approved');
+                            } else if (data.approvalStatus === 'rejected') {
+                                clearInterval(pollInterval);
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'สัญญาไม่ได้รับการอนุมัติ',
+                                    text: 'หัวหน้างานไม่อนุมัติสัญญานี้ กรุณาติดต่อหัวหน้างานเพื่อสอบถามรายละเอียด',
+                                    confirmButtonText: 'ตกลง'
+                                });
+                                resolve('rejected');
+                            }
+                        } catch (err) {
+                            console.error('Approval polling error:', err);
+                        }
+                    }, 3000);
+                }
+            });
+        });
+    }
+
+    window.receivePayment = async function (id, installmentNo, amount) {
+        if (currentEditData && currentEditData.approvalStatus === 'pending') {
+            const result = await waitForApprovalIfPending(currentEditData._id);
+            if (result !== 'approved') return;
+            // Refresh data after approval
+            const res = await fetch(`/api/warranties/${currentEditData._id}`);
+            currentEditData = await res.json();
+            renderPaymentManagement(currentEditData);
+        }
         startCheckout(currentEditData, null, {
             amountDue: amount,
             installmentNo,
@@ -888,7 +942,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    window.receiveAllRemainingPayments = function (id, totalAmount) {
+    window.receiveAllRemainingPayments = async function (id, totalAmount) {
+        if (currentEditData && currentEditData.approvalStatus === 'pending') {
+            const result = await waitForApprovalIfPending(currentEditData._id);
+            if (result !== 'approved') return;
+            const res = await fetch(`/api/warranties/${currentEditData._id}`);
+            currentEditData = await res.json();
+            renderPaymentManagement(currentEditData);
+        }
         startCheckout(currentEditData, null, {
             amountDue: totalAmount,
             payAllRemaining: true,
@@ -1124,6 +1185,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const payload = {
             memberId: document.getElementById('memberId').value,
             shopName: document.getElementById('shopName').value,
+            protectionType: document.getElementById('protectionType').value,
             staffName: currentUser.staffName,
             customer: {
                 firstName: document.getElementById('firstName').value,
@@ -1174,21 +1236,73 @@ document.addEventListener('DOMContentLoaded', () => {
                     modalText.textContent = 'ข้อมูลประกันภัยได้ถูกอัปเดตลงในระบบเรียบร้อยแล้ว';
                     hideCheckout();
                     closeBtn.style.display = 'block';
+                    showView('dashboard');
+                    fetchWarranties();
                 } else {
-                    modalTitle.textContent = 'ลงทะเบียนสำเร็จ!';
-                    modalText.textContent = 'ข้อมูลการลงทะเบียนประกันภัยของคุณถูกบันทึกเรียบร้อยแล้ว';
-
+                    // --- NEW: Approval Polling Flow ---
+                    // Show SweetAlert2 loading spinner and poll for approval
+                    const savedWarrantyId = data._id;
+                    const savedData = data;
+                    const savedPayload = payload;
                     const markPaid = document.getElementById('initialPaidCheck')?.checked;
-                    if (markPaid) {
-                        modalText.textContent = 'บันทึกข้อมูลและสถานะการชำระเงินเรียบร้อยแล้ว';
-                        hideCheckout();
-                        document.getElementById('checkoutStep3').style.display = 'block';
-                        setupPrintButton(data, payload);
-                    } else {
-                        startCheckout(data, payload);
-                    }
+
+                    Swal.fire({
+                        title: 'กรุณารออนุมัติสัญญา...',
+                        html: '<p style="color: #64748b; font-size: 0.9rem;">ระบบกำลังรอการอนุมัติจากหัวหน้างาน<br>กรุณาอย่าปิดหน้านี้</p>',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        showConfirmButton: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+
+                            // Poll every 3 seconds
+                            const pollInterval = setInterval(async () => {
+                                try {
+                                    const pollRes = await fetch(`/api/warranties/${savedWarrantyId}`);
+                                    const pollData = await pollRes.json();
+
+                                    if (pollData.approvalStatus === 'approved') {
+                                        clearInterval(pollInterval);
+                                        Swal.close();
+
+                                        showView('dashboard');
+                                        fetchWarranties();
+
+                                        // Resume original flow
+                                        const modalTitle = document.getElementById('successModalTitle');
+                                        const modalText = document.getElementById('successModalText');
+                                        const closeBtn = document.getElementById('closeModal');
+
+                                        modalTitle.textContent = 'ลงทะเบียนสำเร็จ!';
+                                        modalText.textContent = 'สัญญาได้รับการอนุมัติแล้ว';
+
+                                        if (markPaid) {
+                                            modalText.textContent = 'สัญญาอนุมัติแล้ว - บันทึกสถานะการชำระเงินเรียบร้อย';
+                                            hideCheckout();
+                                            document.getElementById('checkoutStep3').style.display = 'block';
+                                            setupPrintButton(savedData, savedPayload);
+                                        } else {
+                                            startCheckout(savedData, savedPayload);
+                                        }
+                                        document.getElementById('successModal').style.display = 'flex';
+
+                                    } else if (pollData.approvalStatus === 'rejected') {
+                                        clearInterval(pollInterval);
+                                        Swal.fire({
+                                            icon: 'error',
+                                            title: 'สัญญาไม่ได้รับการอนุมัติ',
+                                            text: 'หัวหน้างานไม่อนุมัติสัญญานี้ กรุณาติดต่อหัวหน้างานเพื่อสอบถามรายละเอียด',
+                                            confirmButtonText: 'ตกลง'
+                                        });
+                                    }
+                                    // If still 'pending', do nothing and wait for next poll
+                                } catch (pollErr) {
+                                    console.error('Polling error:', pollErr);
+                                }
+                            }, 3000);
+                        }
+                    });
                 }
-                document.getElementById('successModal').style.display = 'flex';
             } else {
                 showAlert('error', data.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล');
             }

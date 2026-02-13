@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Easy Care | อนุมัติสัญญา</title>
+    <link rel="icon" type="image/png" href="logo_easycare.png">
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&family=Outfit:wght@400;600;700&display=swap"
+        rel="stylesheet">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        /* Approval Page Specific Styles */
+        .filter-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-tab-btn {
+            padding: 0.6rem 1.2rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            background: #fff;
+            color: #64748b;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            font-family: inherit;
+        }
+
+        .filter-tab-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(13, 148, 136, 0.05);
+        }
+
+        .filter-tab-btn.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+        }
+
+        .filter-tab-btn .badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.25);
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-left: 6px;
+        }
+
+        .filter-tab-btn.active .badge {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .filter-tab-btn:not(.active) .badge {
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        .approval-actions {
+            display: flex;
+            gap: 0.4rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .approval-actions button {
+            padding: 0.4rem 0.8rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-approve {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: #fff;
+        }
+
+        .btn-approve:hover {
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .btn-reject {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: #fff;
+        }
+
+        .btn-reject:hover {
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .btn-view {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: #fff;
+        }
+
+        .btn-view:hover {
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-badge.pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-badge.rejected,
+        .status-badge.expired {
+            background: #fef2f2;
+            color: #991b1b;
+        }
+
+        .status-badge.approved,
+        .status-badge.active {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        /* Stats cards for approval page */
+        .approval-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .approval-stat-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s ease;
+        }
+
+        .approval-stat-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        .approval-stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+        }
+
+        .approval-stat-icon.pending-bg {
+            background: #fef3c7;
+        }
+
+        .approval-stat-icon.approved-bg {
+            background: #dcfce7;
+        }
+
+        .approval-stat-icon.rejected-bg {
+            background: #fef2f2;
+        }
+
+        .approval-stat-content h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+            color: var(--text-main);
+        }
+
+        .approval-stat-content p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        /* Detail modal sections */
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.8rem;
+            text-align: left;
+        }
+
+        .detail-item {
+            padding: 0.6rem;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+
+        .detail-item label {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .detail-item span {
+            font-weight: 600;
+            color: var(--text-main);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .approval-actions {
+                flex-direction: column;
+            }
+
+            .approval-actions button {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* ====== Auto-Refresh: Live Update Indicator ====== */
+        .table-header-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .live-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #16a34a;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            padding: 4px 12px;
+            border-radius: 20px;
+            user-select: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .live-indicator.paused {
+            color: #94a3b8;
+            background: #f1f5f9;
+            border-color: #e2e8f0;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+            display: inline-block;
+            animation: livePulse 1.5s ease-in-out infinite;
+        }
+
+        .live-indicator.paused .live-dot {
+            background: #94a3b8;
+            animation: none;
+        }
+
+        @keyframes livePulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.4;
+                transform: scale(0.7);
+            }
+        }
+
+        .btn-toggle-refresh {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            background: #fff;
+            color: #64748b;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            font-family: inherit;
+        }
+
+        .btn-toggle-refresh:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-toggle-refresh.active {
+            background: #fef3c7;
+            border-color: #f59e0b;
+            color: #92400e;
+        }
+
+        /* Row highlight for new items */
+        @keyframes newRowFlash {
+            0% {
+                background: #fef9c3;
+            }
+
+            50% {
+                background: #fef08a;
+            }
+
+            100% {
+                background: transparent;
+            }
+        }
+
+        tr.new-row-highlight {
+            animation: newRowFlash 2s ease-out;
+        }
+    </style>
+</head>
+
+<body class="dashboard-page">
+    <!-- Global Loader Overlay -->
+    <div id="global-loader" class="global-loader">
+        <div class="loader-content">
+            <div class="loader-spinner">
+                <div class="spinner-ring"></div>
+                <div class="spinner-ring"></div>
+                <div class="spinner-ring"></div>
+            </div>
+            <p class="loader-text">กำลังโหลด...</p>
+        </div>
+    </div>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Mobile Header Bar -->
+    <div class="mobile-header">
+        <button class="mobile-menu-btn" id="mobileMenuBtn">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+        </button>
+        <div class="mobile-logo-text">Smile<span>Care</span></div>
+        <div style="width: 40px;"></div>
+    </div>
+
+    <div class="dashboard-container">
+        <aside class="sidebar" id="sidebar">
+            <img src="logo_easycare.png" alt="Easy Care Logo" class="logo">
+            <nav>
+                <a href="index.html">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                    แพ็กเกจ
+                </a>
+                <a href="approval.html" class="active">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 11l3 3L22 4"></path>
+                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                    </svg>
+                    อนุมัติสัญญา
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="staff-info">
+                    <div class="staff-avatar" id="staffInitial">A</div>
+                    <div class="staff-details">
+                        <p class="staff-name" id="displayStaffName">เจ้าหน้าที่</p>
+                        <p class="staff-role">ผู้ดูแลระบบ</p>
+                    </div>
+                </div>
+                <button id="logoutBtn" class="logout-link">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    ออกจากระบบ
+                </button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="dashboard-header">
+                <div class="header-titles">
+                    <h1>อนุมัติสัญญาประกัน</h1>
+                    <p>ตรวจสอบและอนุมัติ/ไม่อนุมัติสัญญาประกันภัยใหม่</p>
+                </div>
+            </header>
+
+            <!-- Filter Tabs -->
+            <div class="filter-tabs">
+                <button class="filter-tab-btn active" data-status="pending">⏳ รออนุมัติ <span class="badge"
+                        id="badgePending">0</span></button>
+                <button class="filter-tab-btn" data-status="approved">✅ อนุมัติแล้ว <span class="badge"
+                        id="badgeApproved">0</span></button>
+                <button class="filter-tab-btn" data-status="rejected">❌ ไม่อนุมัติ <span class="badge"
+                        id="badgeRejected">0</span></button>
+            </div>
+
+            <!-- Table -->
+            <div class="table-header-bar">
+                <div id="liveIndicator" class="live-indicator">
+                    <span class="live-dot"></span>
+                    <span id="liveText">Live Update</span>
+                </div>
+                <button id="btnToggleRefresh" class="btn-toggle-refresh" title="หยุด/เริ่ม Auto-Refresh">
+                    ⏸ หยุดชั่วคราว
+                </button>
+            </div>
+            <div class="table-container">
+                <table id="approvalTable">
+                    <thead>
+                        <tr>
+                            <th>เลขกรมธรรม์</th>
+                            <th>ชื่อลูกค้า</th>
+                            <th>รุ่นอุปกรณ์</th>
+                            <th>แพ็กเกจ</th>
+                            <th>ร้านค้า</th>
+                            <th>สถานะ</th>
+                            <th>ดำเนินการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="approvalBody">
+                    </tbody>
+                </table>
+                <div id="approvalEmptyState" class="empty-state" style="display: none;">
+                    <p>ไม่พบรายการสัญญาในหมวดนี้</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Auth Check ---
+            const currentUser = JSON.parse(localStorage.getItem('smilecare_staff_session'));
+            if (!currentUser) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // Update staff info
+            const staffNameEl = document.getElementById('displayStaffName');
+            const staffInitialEl = document.getElementById('staffInitial');
+            if (staffNameEl) staffNameEl.textContent = currentUser.staffName;
+            if (staffInitialEl) staffInitialEl.textContent = currentUser.staffName.charAt(0).toUpperCase();
+
+            // Logout
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                localStorage.removeItem('smilecare_staff_session');
+                window.location.href = 'index.html';
+            });
+
+            // Mobile sidebar toggle
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            if (mobileMenuBtn) {
+                mobileMenuBtn.addEventListener('click', () => {
+                    sidebar.classList.toggle('open');
+                    overlay.classList.toggle('active');
+                });
+                overlay.addEventListener('click', () => {
+                    sidebar.classList.remove('open');
+                    overlay.classList.remove('active');
+                });
+            }
+
+            // --- SweetAlert2 Config ---
+            const MySwal = Swal.mixin({
+                customClass: {
+                    confirmButton: 'submit-btn',
+                    cancelButton: 'btn-cancel',
+                },
+                buttonsStyling: false,
+                confirmButtonColor: '#0d9488',
+                cancelButtonColor: '#ef4444',
+                background: 'rgba(255, 255, 255, 0.95)',
+                backdrop: 'rgba(15, 23, 42, 0.6)'
+            });
+
+            // --- State ---
+            let currentFilter = 'pending';
+            let allWarranties = [];
+            let autoRefreshInterval = null;
+            let isAutoRefreshPaused = false;
+            let isSilentFetching = false; // prevent overlapping silent fetches
+
+            // --- Loader (for manual/explicit actions only) ---
+            function showLoader(text = 'กำลังโหลด...') {
+                const loader = document.getElementById('global-loader');
+                const loaderText = loader.querySelector('.loader-text');
+                if (loaderText) loaderText.textContent = text;
+                loader.classList.add('active');
+            }
+            function hideLoader() {
+                document.getElementById('global-loader').classList.remove('active');
+            }
+
+            // --- Check if a SweetAlert modal is currently open ---
+            function isModalOpen() {
+                return Swal.isVisible();
+            }
+
+            // --- Extract sorted IDs from a warranty array ---
+            function getIdSet(warranties) {
+                return warranties.map(w => w._id).sort().join(',');
+            }
+
+            // --- Fetch Stats Counts (silent, no loader) ---
+            async function fetchAllCounts() {
+                try {
+                    const [pendingRes, approvedRes, rejectedRes] = await Promise.all([
+                        fetch('/api/warranties/pending?status=pending'),
+                        fetch('/api/warranties/pending?status=approved'),
+                        fetch('/api/warranties/pending?status=rejected')
+                    ]);
+                    const pending = await pendingRes.json();
+                    const approved = await approvedRes.json();
+                    const rejected = await rejectedRes.json();
+
+                    if (document.getElementById('badgePending')) document.getElementById('badgePending').textContent = pending.length;
+                    if (document.getElementById('badgeApproved')) document.getElementById('badgeApproved').textContent = approved.length;
+                    if (document.getElementById('badgeRejected')) document.getElementById('badgeRejected').textContent = rejected.length;
+                } catch (err) {
+                    console.error('Error fetching counts:', err);
+                }
+            }
+
+            // --- Full Fetch (with loader, for initial load & manual actions) ---
+            async function fetchWarranties(status) {
+                showLoader();
+                try {
+                    const res = await fetch(`/api/warranties/pending?status=${status}`);
+                    allWarranties = await res.json();
+                    renderTable(allWarranties);
+                    fetchAllCounts();
+                } catch (err) {
+                    console.error('Error fetching warranties:', err);
+                } finally {
+                    hideLoader();
+                }
+            }
+
+            // --- Silent Fetch (for auto-refresh, no loader, smart diff) ---
+            async function silentFetchWarranties() {
+                // Skip if already fetching, or if a modal is open
+                if (isSilentFetching || isModalOpen()) return;
+
+                isSilentFetching = true;
+                try {
+                    const res = await fetch(`/api/warranties/pending?status=${currentFilter}`);
+                    const freshData = await res.json();
+
+                    // Skip DOM update if modal opened while we were fetching
+                    if (isModalOpen()) return;
+
+                    const oldIds = getIdSet(allWarranties);
+                    const newIds = getIdSet(freshData);
+
+                    // Only update DOM if data has actually changed
+                    if (oldIds !== newIds) {
+                        // Find which IDs are new (not in previous set)
+                        const previousIdSet = new Set(allWarranties.map(w => w._id));
+                        const newItemIds = freshData.filter(w => !previousIdSet.has(w._id)).map(w => w._id);
+
+                        allWarranties = freshData;
+                        renderTable(allWarranties, newItemIds);
+                    }
+
+                    // Always silently refresh counts
+                    fetchAllCounts();
+                } catch (err) {
+                    console.error('Silent refresh error:', err);
+                } finally {
+                    isSilentFetching = false;
+                }
+            }
+
+            // --- Render Table ---
+            function renderTable(records, highlightIds = []) {
+                const body = document.getElementById('approvalBody');
+                const empty = document.getElementById('approvalEmptyState');
+
+                if (records.length === 0) {
+                    body.innerHTML = '';
+                    empty.style.display = 'block';
+                    return;
+                }
+
+                empty.style.display = 'none';
+                const highlightSet = new Set(highlightIds);
+
+                body.innerHTML = records.map(w => {
+                    let st = { text: 'รออนุมัติ', class: 'pending' };
+                    if (w.approvalStatus === 'approved') {
+                        const isExpired = new Date(w.warrantyDates?.end) < new Date();
+                        st = isExpired ? { text: 'หมดอายุ', class: 'expired' } : { text: 'ปกติ', class: 'active' };
+                    } else if (w.approvalStatus === 'rejected') {
+                        st = { text: 'ไม่อนุมัติ', class: 'rejected' };
+                    }
+                    const rowClass = highlightSet.has(w._id) ? ' class="new-row-highlight"' : '';
+
+                    return `
+                        <tr${rowClass}>
+                            <td data-label="เลขกรมธรรม์" style="font-weight: 600;">${w.policyNumber || '-'}</td>
+                            <td data-label="ชื่อลูกค้า">${w.customer?.firstName || ''} ${w.customer?.lastName || ''}</td>
+                            <td data-label="รุ่นอุปกรณ์">${w.device?.model || '-'}</td>
+                            <td data-label="แพ็กเกจ">${w.package?.plan || '-'} (${w.package?.price?.toLocaleString() || 0} บาท)</td>
+                            <td data-label="ร้านค้า">${w.shopName || '-'}</td>
+                            <td data-label="สถานะ"><span class="status-badge ${st.class}">${st.text}</span></td>
+                            <td data-label="ดำเนินการ">
+                                <div class="approval-actions">
+                                    <button class="btn-view" onclick="viewDetails('${w._id}')">👁 ดูรายละเอียด</button>
+                                    ${w.approvalStatus === 'pending' ? `
+                                        <button class="btn-approve" onclick="approveWarranty('${w._id}')">✅ อนุมัติ</button>
+                                        <button class="btn-reject" onclick="rejectWarranty('${w._id}')">❌ ไม่อนุมัติ</button>
+                                    ` : ''}
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            // --- Actions ---
+            window.viewDetails = function (id) {
+                const w = allWarranties.find(r => r._id === id);
+                if (!w) return;
+
+                let st = { text: 'รออนุมัติ', class: 'pending' };
+                if (w.approvalStatus === 'approved') {
+                    const isExpired = new Date(w.warrantyDates?.end) < new Date();
+                    st = isExpired ? { text: 'หมดอายุ', class: 'expired' } : { text: 'ปกติ', class: 'active' };
+                } else if (w.approvalStatus === 'rejected') {
+                    st = { text: 'ไม่อนุมัติ', class: 'rejected' };
+                }
+
+                MySwal.fire({
+                    title: `📋 สัญญา #${w.policyNumber}`,
+                    html: `
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <label>รหัสลูกค้า</label>
+                                <span>${w.customer?.id || '-'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <label>เลขบัตรประชาชน</label>
+                                <span>${w.customer?.citizenId || '-'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <label>ชื่อลูกค้า</label>
+                                <span>${w.customer?.firstName || ''} ${w.customer?.lastName || ''}</span>
+                            </div>
+                            <div class="detail-item">
+                                <label>อายุ</label>
+                                <span>${w.customer?.age || ''}</span>
+                            </div>
+                            <div class="detail-item">
+                                <label>เบอร์โทรศัพท์</label>
+                                <span>${w.customer?.phone || '-'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <label>ประเภทอุปกรณ์</label>
+                                <span>${w.device?.type || '-'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <label>รุ่น (Model)</label>
+                                <span>${w.device?.model || '-'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <label>สี</label>
+                                <span>${w.device?.color || '-'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <label>ความจุ</label>
+                                <span>${w.device?.capacity || '-'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <label>Serial Number</label>
+                                <span>${w.device?.serial || '-'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <label>IMEI</label>
+                                <span>${w.device?.imei || '-'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <label>มูลค่าเครื่อง</label>
+                                <span>${w.device?.deviceValue?.toLocaleString() || 0} บาท</span>
+                            </div>
+                            <div class="detail-item">
+                                <label>แพ็กเกจ</label>
+                                <span>${w.package?.plan || '-'} (${w.package?.price?.toLocaleString() || 0} บาท)</span>
+                            </div>
+                            <div class="detail-item">
+                                <label>วิธีชำระ</label>
+                                <span>${w.payment?.method || '-'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <label>ร้านค้า</label>
+                                <span>${w.shopName || '-'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <label>ผู้บันทึก</label>
+                                <span>${w.staffName || '-'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <label>สถานะ</label>
+                                <span class="status-badge ${st.class}">${st.text}</span>
+                            </div>
+                        </div>
+                    `,
+                    width: 600,
+                    showConfirmButton: true,
+                    confirmButtonText: 'ปิด',
+                });
+            };
+
+            window.approveWarranty = async function (id) {
+                const result = await MySwal.fire({
+                    title: 'ยืนยันการอนุมัติ?',
+                    text: 'คุณต้องการอนุมัติสัญญานี้หรือไม่?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: '✅ อนุมัติ',
+                    cancelButtonText: 'ยกเลิก',
+                });
+
+                if (!result.isConfirmed) return;
+
+                showLoader('กำลังอนุมัติ...');
+                try {
+                    const res = await fetch(`/api/warranties/${id}/approve`, { method: 'PUT' });
+                    const data = await res.json();
+                    if (res.ok) {
+                        MySwal.fire({
+                            icon: 'success',
+                            title: 'อนุมัติสำเร็จ!',
+                            text: 'สัญญาได้รับการอนุมัติแล้ว',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                        fetchWarranties(currentFilter);
+                    } else {
+                        MySwal.fire('เกิดข้อผิดพลาด', data.message || 'ไม่สามารถอนุมัติได้', 'error');
+                    }
+                } catch (err) {
+                    console.error('Approve error:', err);
+                    MySwal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error');
+                } finally {
+                    hideLoader();
+                }
+            };
+
+            window.rejectWarranty = async function (id) {
+                const result = await MySwal.fire({
+                    title: 'ยืนยันไม่อนุมัติ?',
+                    text: 'สัญญานี้จะถูกปฏิเสธ ไม่สามารถดำเนินการชำระเงินได้',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: '❌ ไม่อนุมัติ',
+                    cancelButtonText: 'ยกเลิก',
+                    confirmButtonColor: '#ef4444',
+                });
+
+                if (!result.isConfirmed) return;
+
+                showLoader('กำลังดำเนินการ...');
+                try {
+                    const res = await fetch(`/api/warranties/${id}/reject`, { method: 'PUT' });
+                    const data = await res.json();
+                    if (res.ok) {
+                        MySwal.fire({
+                            icon: 'info',
+                            title: 'ไม่อนุมัติสัญญา',
+                            text: 'สัญญาถูกปฏิเสธเรียบร้อยแล้ว',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                        fetchWarranties(currentFilter);
+                    } else {
+                        MySwal.fire('เกิดข้อผิดพลาด', data.message || 'ไม่สามารถดำเนินการได้', 'error');
+                    }
+                } catch (err) {
+                    console.error('Reject error:', err);
+                    MySwal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error');
+                } finally {
+                    hideLoader();
+                }
+            };
+
+            // --- Filter Tab Listeners ---
+            document.querySelectorAll('.filter-tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-tab-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentFilter = btn.dataset.status;
+                    fetchWarranties(currentFilter);
+                });
+            });
+
+            // ====== AUTO-REFRESH LOGIC ======
+            const liveIndicator = document.getElementById('liveIndicator');
+            const liveText = document.getElementById('liveText');
+            const btnToggle = document.getElementById('btnToggleRefresh');
+
+            function startAutoRefresh() {
+                stopAutoRefresh(); // clear any existing interval
+                autoRefreshInterval = setInterval(silentFetchWarranties, 5000);
+            }
+
+            function stopAutoRefresh() {
+                if (autoRefreshInterval) {
+                    clearInterval(autoRefreshInterval);
+                    autoRefreshInterval = null;
+                }
+            }
+
+            btnToggle.addEventListener('click', () => {
+                if (isAutoRefreshPaused) {
+                    // Resume
+                    isAutoRefreshPaused = false;
+                    startAutoRefresh();
+                    btnToggle.textContent = '⏸ หยุดชั่วคราว';
+                    btnToggle.classList.remove('active');
+                    liveIndicator.classList.remove('paused');
+                    liveText.textContent = 'Live Update';
+                } else {
+                    // Pause
+                    isAutoRefreshPaused = true;
+                    stopAutoRefresh();
+                    btnToggle.textContent = '▶ เริ่มอัตโนมัติ';
+                    btnToggle.classList.add('active');
+                    liveIndicator.classList.add('paused');
+                    liveText.textContent = 'Paused';
+                }
+            });
+
+            // --- Initial Load ---
+            fetchWarranties('pending');
+            startAutoRefresh();
+        });
+    </script>
+</body>
+
+</html>
