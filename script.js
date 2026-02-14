@@ -1700,6 +1700,8 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('memberCitizenId').value = member.citizenId || '';
             document.getElementById('memberIssueDate').value = member.issueDate ? member.issueDate.split('T')[0] : '';
             document.getElementById('memberExpiryDate').value = member.expiryDate ? member.expiryDate.split('T')[0] : '';
+            document.getElementById('memberFacebook').value = member.facebook || '';
+            document.getElementById('memberFacebookLink').value = member.facebookLink || '';
 
             const photoContainer = document.getElementById('smartCardPhotoContainer');
             const photoImg = document.getElementById('smartCardPhoto');
@@ -1731,6 +1733,8 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('memberLastNameEn').value = '';
             document.getElementById('memberIssueDate').value = '';
             document.getElementById('memberExpiryDate').value = '';
+            document.getElementById('memberFacebook').value = '';
+            document.getElementById('memberFacebookLink').value = '';
             document.getElementById('smartCardPhotoContainer').style.display = 'none';
             document.getElementById('smartCardPhoto').src = '';
 
@@ -1779,6 +1783,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 gender: document.getElementById('memberGender').value,
                 issueDate: document.getElementById('memberIssueDate').value,
                 expiryDate: document.getElementById('memberExpiryDate').value,
+                facebook: document.getElementById('memberFacebook').value,
+                facebookLink: document.getElementById('memberFacebookLink').value,
                 photo: document.getElementById('smartCardPhoto').src.startsWith('data:image') ? document.getElementById('smartCardPhoto').src : undefined
             };
 

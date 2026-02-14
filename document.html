@@ -287,7 +287,8 @@
                     </div>
                     <div class="col w-60">
                         <span class="label" style="font-weight: bold;">สัญญาตะกาฟุลอุบัติเหตุสำหรับโทรศัพท์มือถือ</span>
-                        <span class="label">กธ.<span id="doc_policyNumber" style="width: 120px; font-weight: bold; font-size: 25px;"></span></span>
+                        <span class="label">กธ.<span id="doc_policyNumber"
+                                style="width: 120px; font-weight: bold; font-size: 25px;"></span></span>
                     </div>
                 </div>
 
@@ -295,6 +296,10 @@
                 <div class="row">
                     <div class="col w-60" style="border-right: 1.5px solid #000;">
                         <span class="section-title">1. ข้อมูลลูกค้า</span>
+                        <div class="field">
+                            <span class="label">เลขบัตรประชาชน</span> <span id="doc_idNumber" class="dotted-line"
+                                style="width: 150px;"></span>
+                        </div>
                         <div class="field">
                             <span class="label">ชื่อ</span> <span id="doc_firstName" class="dotted-line"
                                 style="width: 150px;"></span>
@@ -307,6 +312,10 @@
                             <span class="label">อายุ</span> <span id="doc_age" class="dotted-line"
                                 style="width: 50px;"></span>
                             <span class="label">ปี</span>
+                        </div>
+                        <div class="field">
+                            <span class="label">ชื่อเฟสบุ๊ก</span> <span id="doc_facebook" class="dotted-line"
+                                style="width: 150px;"></span>
                         </div>
                         <div class="field" style="align-items: flex-start;">
                             <span class="label">ที่อยู่</span>
@@ -660,6 +669,8 @@
                 document.getElementById('doc_phone').textContent = data.customer.phone;
                 document.getElementById('doc_age').textContent = data.customer.age;
                 document.getElementById('doc_address').textContent = data.customer.address;
+                document.getElementById('doc_idNumber').textContent = data.customer.citizenId || '-';
+                document.getElementById('doc_facebook').textContent = data.customer.facebook || '-';
 
                 // Device Details
                 document.getElementById('doc_deviceType').textContent = data.device.type;

@@ -102,6 +102,8 @@ const MemberSchema = new mongoose.Schema({
     shippingAddress: { type: String },
     issueDate: { type: Date },
     expiryDate: { type: Date },
+    facebook: { type: String },
+    facebookLink: { type: String },
     photo: { type: String } // Base64 encoded image string
 }, { timestamps: true });
 
@@ -193,6 +195,7 @@ app.get('/api/warranties', async (req, res) => {
             {
                 $addFields: {
                     'customer.citizenId': { $arrayElemAt: ['$memberInfo.citizenId', 0] },
+                    'customer.facebook': { $arrayElemAt: ['$memberInfo.facebook', 0] },
                     'customer.id': '$memberId'
                 }
             },
@@ -340,6 +343,7 @@ app.get('/api/warranties/:id', async (req, res) => {
             {
                 $addFields: {
                     'customer.citizenId': { $arrayElemAt: ['$memberInfo.citizenId', 0] },
+                    'customer.facebook': { $arrayElemAt: ['$memberInfo.facebook', 0] },
                     'customer.id': '$memberId'
                 }
             },
