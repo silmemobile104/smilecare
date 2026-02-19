@@ -311,15 +311,17 @@ document.addEventListener('DOMContentLoaded', () => {
         staffRegisterForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const staffName = document.getElementById('regStaffName').value;
+            const staffPosition = document.getElementById('regStaffPosition').value;
             const username = document.getElementById('regUsername').value;
             const password = document.getElementById('regPassword').value;
 
+            console.log('Sending registration data:', { staffName, staffPosition, username });
             showLoader('กำลังลงทะเบียน...');
             try {
                 const res = await fetch('/api/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ staffName, username, password })
+                    body: JSON.stringify({ staffName, staffPosition, username, password })
                 });
                 const data = await res.json();
                 if (data.success) {
@@ -348,8 +350,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateStaffInfo() {
         if (!currentUser) return;
         const nameElem = document.getElementById('displayStaffName');
+        const positionElem = document.getElementById('displayStaffPosition');
         const initialElem = document.getElementById('staffInitial');
         if (nameElem) nameElem.textContent = currentUser.staffName;
+        if (positionElem) positionElem.textContent = currentUser.staffPosition;
         if (initialElem) initialElem.textContent = currentUser.staffName.charAt(0);
     }
 
@@ -2445,11 +2449,41 @@ document.addEventListener('DOMContentLoaded', () => {
                 formData.append('deliveryAddressDetail', addrDetail);
             }
 
-            // Collect device condition checklist
+            // Collect device condition checklist (new button-based format)
+            const conditionKeys = ['exterior', 'screen', 'assembly', 'appleLogo', 'buttons', 'chargingPort',
+                'simTray', 'imeiMatch', 'modelMatch', 'screenTouch', 'faceIdTouchId', 'cameras',
+                'speakerMic', 'connectivity', 'battery', 'warrantyVoid'];
+            const conditionLabels = {
+                exterior: 'ตัวเครื่องภายนอก', screen: 'หน้าจอ', assembly: 'การประกอบ',
+                appleLogo: 'โลโก้ Apple', buttons: 'ปุ่มต่างๆ', chargingPort: 'พอร์ตชาร์จ',
+                simTray: 'ช่องใส่ซิม', imeiMatch: 'IMEI ตรงกัน', modelMatch: 'Model เครื่อง',
+                screenTouch: 'หน้าจอ/ทัชสกรีน', faceIdTouchId: 'Face ID / Touch ID',
+                cameras: 'กล้องหน้า/กล้องหลัง', speakerMic: 'ลำโพง/ไมค์',
+                connectivity: 'การเชื่อมต่อ', battery: 'แบตเตอรี่', warrantyVoid: 'ประกัน/วอยด์'
+            };
             const deviceCondition = {};
-            document.querySelectorAll('input[name="deviceCondition"]').forEach(cb => {
-                deviceCondition[cb.value] = cb.checked;
-            });
+            let conditionErrors = [];
+            for (const key of conditionKeys) {
+                const row = document.querySelector(`#deviceConditionChecklist .condition-row[data-key="${key}"]`);
+                const isNormal = row && row.classList.contains('is-normal');
+                const isAbnormal = row && row.classList.contains('is-abnormal');
+                if (!isNormal && !isAbnormal) {
+                    conditionErrors.push(conditionLabels[key]);
+                    continue;
+                }
+                const status = isNormal ? 'normal' : 'abnormal';
+                let reason = '';
+                if (isAbnormal) {
+                    const reasonEl = document.getElementById(`reason-text-${key}`);
+                    reason = reasonEl ? reasonEl.value.trim() : '';
+                    if (!reason) { conditionErrors.push(`${conditionLabels[key]} (ต้องระบุเหตุผล)`); }
+                }
+                deviceCondition[key] = { status, reason };
+            }
+            if (conditionErrors.length > 0) {
+                showAlert('warning', `กรุณาเลือกสภาพและระบุเหตุผลให้ครบทุกรายการ:\n• ${conditionErrors.join('\n• ')}`);
+                return;
+            }
             formData.append('deviceCondition', JSON.stringify(deviceCondition));
 
             // Append image files
@@ -2543,8 +2577,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const conditionGrid = document.getElementById('contractConditionGrid');
         if (conditionGrid) {
             conditionGrid.innerHTML = Object.entries(conditionMap).map(([key, label]) => {
-                const isChecked = conditions[key] ? 'checked' : '';
-                return `<div style="display: flex; align-items: center; font-size: 0.9rem;"><input type="checkbox" disabled ${isChecked} style="margin-right: 6px; transform: scale(1.1);"> ${label}</div>`;
+                const item = conditions[key];
+                // Support both old boolean format and new {status, reason} format
+                const isNormal = item === true || (item && item.status === 'normal');
+                const isAbnormal = item === false || (item && item.status === 'abnormal');
+                const reason = (item && item.reason) ? item.reason : '';
+                let badge = `<span style="color:#94a3b8;font-size:0.8rem;">—</span>`;
+                if (isNormal) badge = `<span style="color:#16a34a;font-weight:700;">✅ ปกติ</span>`;
+                if (isAbnormal) badge = `<span style="color:#dc2626;font-weight:700;">❌ ไม่ปกติ</span>`;
+                const reasonHtml = (isAbnormal && reason) ? `<div style="font-size:0.78rem;color:#dc2626;margin-top:2px;padding-left:4px;">↳ ${reason}</div>` : '';
+                return `<div style="font-size:0.85rem;padding:2px 0;">${badge} ${label}${reasonHtml}</div>`;
             }).join('');
         }
 

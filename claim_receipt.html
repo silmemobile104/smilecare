@@ -313,11 +313,11 @@
             <!-- Header Page 1 -->
             <div class="header">
                 <div class="logo-section">
-                    <img src="logo_easycare.png" alt="Easy Care Logo" style="height: 20px; object-fit: contain;">
+                    <img src="logo_easycare.png" alt="Easy.Care Logo" style="height: 20px; object-fit: contain;">
                 </div>
                 <div class="company-name">
                     <h1>อีซี่แคร์</h1>
-                    <h2>Easy Care</h2>
+                    <h2>Easy.Care</h2>
                 </div>
                 <div class="date-section">
                     วันที่ <span id="claimDate_p1">.....................................................</span>
@@ -409,46 +409,22 @@
                 <!-- 2.1 Device Condition Checklist -->
                 <div class="row section-header-row">
                     <div class="col w-100">
-                        <span class="section-title">2.1 ตรวจสอบสภาพเครื่อง (Device Condition Checklist)</span>
+                        <span class="section-title">2.1 ตรวจสอบสภาพเครื่อง — รายการไม่ปกติ (Abnormal Conditions)</span>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col w-100">
-                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; font-size: 14px;">
-                            <div style="display: flex; align-items: center;"><input type="checkbox" id="check_exterior"
-                                    disabled style="margin-right: 5px;"> ตัวเครื่องภายนอก</div>
-                            <div style="display: flex; align-items: center;"><input type="checkbox" id="check_screen"
-                                    disabled style="margin-right: 5px;"> หน้าจอ</div>
-                            <div style="display: flex; align-items: center;"><input type="checkbox" id="check_assembly"
-                                    disabled style="margin-right: 5px;"> การประกอบ</div>
-                            <div style="display: flex; align-items: center;"><input type="checkbox" id="check_appleLogo"
-                                    disabled style="margin-right: 5px;"> โลโก้ Apple</div>
-                            <div style="display: flex; align-items: center;"><input type="checkbox" id="check_buttons"
-                                    disabled style="margin-right: 5px;"> ปุ่มต่างๆ</div>
-                            <div style="display: flex; align-items: center;"><input type="checkbox"
-                                    id="check_chargingPort" disabled style="margin-right: 5px;"> พอร์ตชาร์จ</div>
-                            <div style="display: flex; align-items: center;"><input type="checkbox" id="check_simTray"
-                                    disabled style="margin-right: 5px;"> ช่องใส่ซิม</div>
-                            <div style="display: flex; align-items: center;"><input type="checkbox" id="check_imeiMatch"
-                                    disabled style="margin-right: 5px;"> IMEI ตรงกัน</div>
-                            <div style="display: flex; align-items: center;"><input type="checkbox"
-                                    id="check_modelMatch" disabled style="margin-right: 5px;"> Model เครื่อง</div>
-                            <div style="display: flex; align-items: center;"><input type="checkbox"
-                                    id="check_screenTouch" disabled style="margin-right: 5px;"> หน้าจอ/ทัชสกรีน</div>
-                            <div style="display: flex; align-items: center;"><input type="checkbox"
-                                    id="check_faceIdTouchId" disabled style="margin-right: 5px;"> Face ID / Touch ID
-                            </div>
-                            <div style="display: flex; align-items: center;"><input type="checkbox" id="check_cameras"
-                                    disabled style="margin-right: 5px;"> กล้องหน้า/กล้องหลัง</div>
-                            <div style="display: flex; align-items: center;"><input type="checkbox"
-                                    id="check_speakerMic" disabled style="margin-right: 5px;"> ลำโพง/ไมค์</div>
-                            <div style="display: flex; align-items: center;"><input type="checkbox"
-                                    id="check_connectivity" disabled style="margin-right: 5px;"> การเชื่อมต่อ</div>
-                            <div style="display: flex; align-items: center;"><input type="checkbox" id="check_battery"
-                                    disabled style="margin-right: 5px;"> แบตเตอรี่</div>
-                            <div style="display: flex; align-items: center;"><input type="checkbox"
-                                    id="check_warrantyVoid" disabled style="margin-right: 5px;"> ประกัน/วอยด์</div>
+                        <div id="abnormalConditionList" style="font-size: 15px; line-height: 1.8;"></div>
+                    </div>
+                </div>
+
+                <!-- 5. Images (if available) -->
+                <div id="imagesSection" class="row" style="display: none;">
+                    <div class="col w-100">
+                        <div style="margin-bottom: 8px;">
+                            <span class="label" style="font-weight: bold;">รูปภาพประกอบ (Supporting Images):</span>
                         </div>
+                        <div class="images-grid" id="imageContainer"></div>
                     </div>
                 </div>
 
@@ -499,11 +475,11 @@
             <!-- Header Page 2 -->
             <div class="header">
                 <div class="logo-section">
-                    <img src="logo_easycare.png" alt="Easy Care Logo" style="height: 20px; object-fit: contain;">
+                    <img src="logo_easycare.png" alt="Easy.Care Logo" style="height: 20px; object-fit: contain;">
                 </div>
                 <div class="company-name">
                     <h1>อีซี่แคร์</h1>
-                    <h2>Easy Care</h2>
+                    <h2>Easy.Care</h2>
                 </div>
                 <div class="date-section">
                     วันที่ <span id="claimDate_p2">.....................................................</span>
@@ -548,16 +524,6 @@
                     </div>
                 </div>
 
-                <!-- 5. Images (if available) -->
-                <div id="imagesSection" class="row" style="display: none;">
-                    <div class="col w-100">
-                        <div style="margin-bottom: 8px;">
-                            <span class="label" style="font-weight: bold;">รูปภาพประกอบ (Supporting Images):</span>
-                        </div>
-                        <div class="images-grid" id="imageContainer"></div>
-                    </div>
-                </div>
-
                 <!-- 5. Terms & Conditions (Labeled as 5 in original, Topic 4 was followed by Images then Terms) -->
                 <div class="row section-header-row">
                     <div class="col w-100">
@@ -581,7 +547,34 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- 6. Contact & Claim Status Tracking -->
+                <div class="row section-header-row">
+                    <div class="col w-100">
+                        <span class="section-title">6. ช่องทางการติดต่อและติดตามสถานะการเคลม (Contact & Claim
+                            Status)</span>
+                    </div>
+                </div>
+                <div class="row" style="border-bottom: none;">
+                    <div class="col w-50" style="border-right: 1px solid #000;">
+                        <div style="font-size: 15px; line-height: 2;">
+                            <div>📞 <strong>โทรศัพท์:</strong> 073-123-456</div>
+                            <div>💬 <strong>LINE OA:</strong> @easycare</div>
+                            <div>📍 <strong>ที่อยู่:</strong> 62 ถ.พิพิธภักดี ต.สะเตง อ.เมืองยะลา จ.ยะลา</div>
+                            <div>🕐 <strong>เวลาทำการ:</strong> จันทร์–เสาร์ 09:00–18:00 น.</div>
+                        </div>
+                    </div>
+                    <div class="col w-50">
+                        <div style="font-size: 15px; line-height: 1.8;">
+                            <div style="font-weight: bold; margin-bottom: 6px;">🔍 ติดตามสถานะการเคลมออนไลน์</div>
+                            <div style="color: #1e40af;">🌐 smilecare.online/tracking</div>
+                            <div style="margin-top: 6px; font-size: 14px; color: #475569;">
+                                กรุณาเตรียมเลขที่เลขที่สมาชิกและเลขประจำตัวประชาชนของท่านเพื่อตรวจสอบความคืบหน้า</div>
+                        </div>
+                    </div>
+                </div>
             </div>
+
         </div>
 
         <!-- Signatures Page 2 -->
@@ -697,32 +690,28 @@
                     `<img src="${claim.staffSignature}" class="signature-img" alt="Staff Signature">`);
             }
 
-            // Populate Device Condition Checklist
-            const conditionMap = {
-                exterior: 'check_exterior',
-                screen: 'check_screen',
-                assembly: 'check_assembly',
-                appleLogo: 'check_appleLogo',
-                buttons: 'check_buttons',
-                chargingPort: 'check_chargingPort',
-                simTray: 'check_simTray',
-                imeiMatch: 'check_imeiMatch',
-                modelMatch: 'check_modelMatch',
-                screenTouch: 'check_screenTouch',
-                faceIdTouchId: 'check_faceIdTouchId',
-                cameras: 'check_cameras',
-                speakerMic: 'check_speakerMic',
-                connectivity: 'check_connectivity',
-                battery: 'check_battery',
-                warrantyVoid: 'check_warrantyVoid'
+            // Populate Section 2.1 — Abnormal Items Only
+            const conditionLabels = {
+                exterior: 'ตัวเครื่องภายนอก', screen: 'หน้าจอ', assembly: 'การประกอบ',
+                appleLogo: 'โลโก้ Apple', buttons: 'ปุ่มต่างๆ', chargingPort: 'พอร์ตชาร์จ',
+                simTray: 'ช่องใส่ซิม', imeiMatch: 'IMEI ตรงกัน', modelMatch: 'Model เครื่อง',
+                screenTouch: 'หน้าจอ/ทัชสกรีน', faceIdTouchId: 'Face ID / Touch ID',
+                cameras: 'กล้องหน้า/กล้องหลัง', speakerMic: 'ลำโพง/ไมค์',
+                connectivity: 'การเชื่อมต่อ', battery: 'แบตเตอรี่', warrantyVoid: 'ประกัน/วอยด์'
             };
-
             const conditions = claim.deviceCondition || {};
-            for (const [key, id] of Object.entries(conditionMap)) {
-                const el = document.getElementById(id);
-                if (el) {
-                    el.checked = !!conditions[key];
-                }
+            const abnormalList = document.getElementById('abnormalConditionList');
+            const abnormalItems = Object.entries(conditions).filter(([key, val]) =>
+                val && (val === false || val.status === 'abnormal')
+            );
+            if (abnormalItems.length === 0) {
+                abnormalList.innerHTML = '<span style="color:#16a34a; font-weight:600;">✅ สภาพปกติทุกรายการ</span>';
+            } else {
+                abnormalList.innerHTML = abnormalItems.map(([key, val]) => {
+                    const label = conditionLabels[key] || key;
+                    const reason = (val && val.reason) ? val.reason : '-';
+                    return `<div style="margin-bottom:6px;"><span style="color:#dc2626;font-weight:700;">❌ ${label}</span> <span style="color:#64748b;">— หมายเหตุ: ${reason}</span></div>`;
+                }).join('');
             }
 
             setMultiContent(['signCustomerName_p1', 'signCustomerName_p2'],

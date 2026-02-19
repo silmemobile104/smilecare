@@ -151,6 +151,7 @@ const Shop = mongoose.model('Shop', ShopSchema);
 const StaffSchema = new mongoose.Schema({
     staffId: { type: String, unique: true },
     staffName: String,
+    staffPosition: String,
     username: { type: String, unique: true, index: true },
     password: { type: String, required: true }
 }, { timestamps: true });
@@ -192,22 +193,22 @@ const ClaimSchema = new mongoose.Schema({
         images: [String]
     }],
     deviceCondition: {
-        exterior: { type: Boolean, default: false },
-        screen: { type: Boolean, default: false },
-        assembly: { type: Boolean, default: false },
-        appleLogo: { type: Boolean, default: false },
-        buttons: { type: Boolean, default: false },
-        chargingPort: { type: Boolean, default: false },
-        simTray: { type: Boolean, default: false },
-        imeiMatch: { type: Boolean, default: false },
-        modelMatch: { type: Boolean, default: false },
-        screenTouch: { type: Boolean, default: false },
-        faceIdTouchId: { type: Boolean, default: false },
-        cameras: { type: Boolean, default: false },
-        speakerMic: { type: Boolean, default: false },
-        connectivity: { type: Boolean, default: false },
-        battery: { type: Boolean, default: false },
-        warrantyVoid: { type: Boolean, default: false }
+        exterior: { status: { type: String, default: '' }, reason: { type: String, default: '' } },
+        screen: { status: { type: String, default: '' }, reason: { type: String, default: '' } },
+        assembly: { status: { type: String, default: '' }, reason: { type: String, default: '' } },
+        appleLogo: { status: { type: String, default: '' }, reason: { type: String, default: '' } },
+        buttons: { status: { type: String, default: '' }, reason: { type: String, default: '' } },
+        chargingPort: { status: { type: String, default: '' }, reason: { type: String, default: '' } },
+        simTray: { status: { type: String, default: '' }, reason: { type: String, default: '' } },
+        imeiMatch: { status: { type: String, default: '' }, reason: { type: String, default: '' } },
+        modelMatch: { status: { type: String, default: '' }, reason: { type: String, default: '' } },
+        screenTouch: { status: { type: String, default: '' }, reason: { type: String, default: '' } },
+        faceIdTouchId: { status: { type: String, default: '' }, reason: { type: String, default: '' } },
+        cameras: { status: { type: String, default: '' }, reason: { type: String, default: '' } },
+        speakerMic: { status: { type: String, default: '' }, reason: { type: String, default: '' } },
+        connectivity: { status: { type: String, default: '' }, reason: { type: String, default: '' } },
+        battery: { status: { type: String, default: '' }, reason: { type: String, default: '' } },
+        warrantyVoid: { status: { type: String, default: '' }, reason: { type: String, default: '' } }
     }
 }, { timestamps: true });
 
@@ -218,7 +219,8 @@ const Claim = mongoose.model('Claim', ClaimSchema);
 // Staff Registration
 app.post('/api/register', async (req, res) => {
     try {
-        const { staffName, username, password } = req.body;
+        const { staffName, staffPosition, username, password } = req.body;
+        console.log('Registering staff:', { staffName, staffPosition, username });
 
         // Check if username exists
         const existingStaff = await Staff.findOne({ username });
@@ -227,10 +229,10 @@ app.post('/api/register', async (req, res) => {
         }
 
         const staffId = 'STF' + Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-        const newStaff = new Staff({ staffId, staffName, username, password });
+        const newStaff = new Staff({ staffId, staffName, staffPosition, username, password });
         await newStaff.save();
 
-        res.status(201).json({ success: true, user: { staffName, staffId } });
+        res.status(201).json({ success: true, user: { staffName, staffId, staffPosition } });
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });
     }
@@ -247,7 +249,7 @@ app.post('/api/login', async (req, res) => {
         if (staff) {
             res.json({
                 success: true,
-                user: { staffName: staff.staffName, staffId: staff.staffId }
+                user: { staffName: staff.staffName, staffId: staff.staffId, staffPosition: staff.staffPosition }
             });
         } else {
             // Fallback for admin if no staff exists yet (optional, but keep for convenience as per requirement)

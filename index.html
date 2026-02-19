@@ -373,6 +373,10 @@
                             <input type="text" id="regStaffName" placeholder="เช่น นายสมชาย ใจดี" required>
                         </div>
                         <div class="form-group">
+                            <label for="regStaffPosition">ตำแหน่ง/หน้าที่</label>
+                            <input type="text" id="regStaffPosition" placeholder="เช่น พนักงานขาย" required>
+                        </div>
+                        <div class="form-group">
                             <label for="regUsername">ชื่อผู้ใช้งาน</label>
                             <input type="text" id="regUsername" placeholder="เช่น admin_smile" required>
                         </div>
@@ -480,7 +484,7 @@
                             <div class="staff-avatar" id="staffInitial">A</div>
                             <div class="staff-details">
                                 <p class="staff-name" id="displayStaffName">เจ้าหน้าที่</p>
-                                <p class="staff-role">ผู้ดูแลระบบ</p>
+                                <p class="staff-role" id="displayStaffPosition">ผู้ดูแลระบบ</p>
                             </div>
                         </div>
                         <button id="logoutBtn" class="logout-link">
@@ -1378,86 +1382,164 @@
 
                     <!-- Pre-repair Inspection Checklist -->
                     <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed #cbd5e1;">
-                        <label style="font-weight: 600; color: #92400e; margin-bottom: 0.5rem; display: block;">
+                        <label style="font-weight: 600; color: #92400e; margin-bottom: 0.75rem; display: block;">
                             🛠️ ตรวจสอบสภาพเครื่องก่อนรับ (Device Condition Checklist)
                         </label>
+                        <p style="font-size: 0.82rem; color: #b45309; margin-bottom: 0.75rem;">⚠️ ทุกรายการต้องกดเลือก
+                            <strong>ปกติ</strong> หรือ <strong>ไม่ปกติ</strong> หากไม่ปกติต้องระบุเหตุผล</p>
                         <style>
-                            .checklist-grid-custom {
-                                display: grid;
-                                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-                                gap: 0.75rem;
+                            .condition-checklist {
+                                display: flex;
+                                flex-direction: column;
+                                gap: 0.65rem;
                                 margin-top: 0.5rem;
                             }
 
-                            .checklist-item-custom {
+                            .condition-row {
+                                background: #f8fafc;
+                                border: 1.5px solid #e2e8f0;
+                                border-radius: 10px;
+                                padding: 0.65rem 1rem;
+                                transition: border-color 0.2s;
+                            }
+
+                            .condition-row.is-normal {
+                                border-color: #22c55e;
+                                background: #f0fdf4;
+                            }
+
+                            .condition-row.is-abnormal {
+                                border-color: #ef4444;
+                                background: #fef2f2;
+                            }
+
+                            .condition-row-top {
                                 display: flex;
                                 align-items: center;
-                                padding: 0.75rem 1rem;
-                                background: #f8fafc;
-                                border: 1px solid #e2e8f0;
-                                border-radius: 10px;
-                                cursor: pointer;
-                                transition: all 0.2s ease;
-                                font-size: 0.95rem;
+                                justify-content: space-between;
+                                gap: 0.5rem;
+                            }
+
+                            .condition-label {
+                                font-size: 0.9rem;
                                 color: #334155;
-                                user-select: none;
+                                font-weight: 500;
+                                flex: 1;
                             }
 
-                            .checklist-item-custom:hover {
-                                background: #ffffff;
-                                border-color: #0891b2;
-                                box-shadow: 0 4px 12px rgba(8, 145, 178, 0.15);
-                                transform: translateY(-2px);
-                                color: #0e7490;
+                            .condition-btns {
+                                display: flex;
+                                gap: 0.4rem;
                             }
 
-                            .checklist-item-custom input[type="checkbox"] {
-                                width: 1.25em;
-                                height: 1.25em;
-                                margin-right: 0.75rem;
-                                accent-color: #0891b2;
+                            .cond-btn {
+                                padding: 0.3rem 0.9rem;
+                                border-radius: 20px;
+                                border: 1.5px solid #cbd5e1;
+                                background: white;
+                                font-size: 0.82rem;
+                                font-weight: 600;
                                 cursor: pointer;
-                                transition: transform 0.2s ease;
+                                transition: all 0.15s;
+                                color: #64748b;
                             }
 
-                            .checklist-item-custom:hover input[type="checkbox"] {
-                                transform: scale(1.1);
+                            .cond-btn:hover {
+                                transform: translateY(-1px);
+                            }
+
+                            .cond-btn.normal-active {
+                                background: #22c55e;
+                                border-color: #16a34a;
+                                color: white;
+                            }
+
+                            .cond-btn.abnormal-active {
+                                background: #ef4444;
+                                border-color: #dc2626;
+                                color: white;
+                            }
+
+                            .condition-reason {
+                                margin-top: 0.5rem;
+                                display: none;
+                            }
+
+                            .condition-reason textarea {
+                                width: 100%;
+                                border: 1.5px solid #fca5a5;
+                                border-radius: 8px;
+                                padding: 0.4rem 0.6rem;
+                                font-size: 0.85rem;
+                                resize: none;
+                                font-family: inherit;
+                                background: #fff1f1;
+                            }
+
+                            .condition-reason textarea:focus {
+                                outline: none;
+                                border-color: #ef4444;
                             }
                         </style>
-                        <div class="checklist-grid-custom">
-                            <label class="checklist-item-custom"><input type="checkbox" name="deviceCondition"
-                                    value="exterior"> ตัวเครื่องภายนอก</label>
-                            <label class="checklist-item-custom"><input type="checkbox" name="deviceCondition"
-                                    value="screen"> หน้าจอ</label>
-                            <label class="checklist-item-custom"><input type="checkbox" name="deviceCondition"
-                                    value="assembly"> การประกอบ</label>
-                            <label class="checklist-item-custom"><input type="checkbox" name="deviceCondition"
-                                    value="appleLogo"> โลโก้ Apple</label>
-                            <label class="checklist-item-custom"><input type="checkbox" name="deviceCondition"
-                                    value="buttons"> ปุ่มต่างๆ</label>
-                            <label class="checklist-item-custom"><input type="checkbox" name="deviceCondition"
-                                    value="chargingPort"> พอร์ตชาร์จ</label>
-                            <label class="checklist-item-custom"><input type="checkbox" name="deviceCondition"
-                                    value="simTray"> ช่องใส่ซิม</label>
-                            <label class="checklist-item-custom"><input type="checkbox" name="deviceCondition"
-                                    value="imeiMatch"> IMEI ตรงกัน</label>
-                            <label class="checklist-item-custom"><input type="checkbox" name="deviceCondition"
-                                    value="modelMatch"> Model เครื่อง</label>
-                            <label class="checklist-item-custom"><input type="checkbox" name="deviceCondition"
-                                    value="screenTouch"> หน้าจอ/ทัชสกรีน</label>
-                            <label class="checklist-item-custom"><input type="checkbox" name="deviceCondition"
-                                    value="faceIdTouchId"> Face ID / Touch ID</label>
-                            <label class="checklist-item-custom"><input type="checkbox" name="deviceCondition"
-                                    value="cameras"> กล้องหน้า/กล้องหลัง</label>
-                            <label class="checklist-item-custom"><input type="checkbox" name="deviceCondition"
-                                    value="speakerMic"> ลำโพง/ไมค์</label>
-                            <label class="checklist-item-custom"><input type="checkbox" name="deviceCondition"
-                                    value="connectivity"> การเชื่อมต่อ</label>
-                            <label class="checklist-item-custom"><input type="checkbox" name="deviceCondition"
-                                    value="battery"> แบตเตอรี่</label>
-                            <label class="checklist-item-custom"><input type="checkbox" name="deviceCondition"
-                                    value="warrantyVoid"> ประกัน/วอยด์</label>
+                        <div class="condition-checklist" id="deviceConditionChecklist">
+                            <!-- Items injected by JS for maintainability -->
                         </div>
+                        <script>
+                            (function () {
+                                const items = [
+                                    { key: 'exterior', label: 'ตัวเครื่องภายนอก' },
+                                    { key: 'screen', label: 'หน้าจอ' },
+                                    { key: 'assembly', label: 'การประกอบ' },
+                                    { key: 'appleLogo', label: 'โลโก้ Apple' },
+                                    { key: 'buttons', label: 'ปุ่มต่างๆ' },
+                                    { key: 'chargingPort', label: 'พอร์ตชาร์จ' },
+                                    { key: 'simTray', label: 'ช่องใส่ซิม' },
+                                    { key: 'imeiMatch', label: 'IMEI ตรงกัน' },
+                                    { key: 'modelMatch', label: 'Model เครื่อง' },
+                                    { key: 'screenTouch', label: 'หน้าจอ/ทัชสกรีน' },
+                                    { key: 'faceIdTouchId', label: 'Face ID / Touch ID' },
+                                    { key: 'cameras', label: 'กล้องหน้า/กล้องหลัง' },
+                                    { key: 'speakerMic', label: 'ลำโพง/ไมค์' },
+                                    { key: 'connectivity', label: 'การเชื่อมต่อ' },
+                                    { key: 'battery', label: 'แบตเตอรี่' },
+                                    { key: 'warrantyVoid', label: 'ประกัน/วอยด์' }
+                                ];
+                                const container = document.getElementById('deviceConditionChecklist');
+                                if (!container) return;
+                                items.forEach(item => {
+                                    const row = document.createElement('div');
+                                    row.className = 'condition-row';
+                                    row.dataset.key = item.key;
+                                    row.innerHTML = `
+                                    <div class="condition-row-top">
+                                        <span class="condition-label">${item.label}</span>
+                                        <div class="condition-btns">
+                                            <button type="button" class="cond-btn normal-btn" data-key="${item.key}">✅ ปกติ</button>
+                                            <button type="button" class="cond-btn abnormal-btn" data-key="${item.key}">❌ ไม่ปกติ</button>
+                                        </div>
+                                    </div>
+                                    <div class="condition-reason" id="reason-${item.key}">
+                                        <textarea rows="2" id="reason-text-${item.key}" placeholder="ระบุเหตุผลที่ไม่ปกติ..."></textarea>
+                                    </div>`;
+                                    const normalBtn = row.querySelector('.normal-btn');
+                                    const abnormalBtn = row.querySelector('.abnormal-btn');
+                                    const reasonDiv = row.querySelector('.condition-reason');
+                                    normalBtn.addEventListener('click', () => {
+                                        row.className = 'condition-row is-normal';
+                                        normalBtn.classList.add('normal-active');
+                                        abnormalBtn.classList.remove('abnormal-active');
+                                        reasonDiv.style.display = 'none';
+                                    });
+                                    abnormalBtn.addEventListener('click', () => {
+                                        row.className = 'condition-row is-abnormal';
+                                        abnormalBtn.classList.add('abnormal-active');
+                                        normalBtn.classList.remove('normal-active');
+                                        reasonDiv.style.display = 'block';
+                                    });
+                                    container.appendChild(row);
+                                });
+                            })();
+                        </script>
                     </div>
 
                     <div class="form-group full-width" style="margin-top: 0.75rem;">
@@ -1723,11 +1805,11 @@
                 <!-- Header -->
                 <div class="cr-header">
                     <div class="cr-logo-section">
-                        <img src="logo_easycare.png" alt="Easy Care Logo" style="height:20px;object-fit:contain;">
+                        <img src="logo_easycare.png" alt="Easy.Care Logo" style="height:20px;object-fit:contain;">
                     </div>
                     <div class="cr-company-name">
                         <h1>อีซี่แคร์</h1>
-                        <h2>Easy Care</h2>
+                        <h2>Easy.Care</h2>
                     </div>
                     <div class="cr-date-section">
                         วันที่ <span id="cr_claimDate">.....................................................</span>
